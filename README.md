@@ -7,7 +7,7 @@ STREAMER
 The documentation is intended to give an introduction on how to use Apache SAMOA in the various possible ways. 
 As a user you can use it to develop new algorithms and test different Distributed Stream Processing Engines.
 
-[Getting Startedhttps](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf)
+[Getting Started](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf)
 
 [Extended User Guide](https://github.com/streamer-framework/streamer/streamer/UserGuideSTREAMER.pdf)
 
@@ -27,7 +27,7 @@ Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
 
 Mohammad ALSHAER (mohammad.alshaer@cea.fr)
 
-# Getting Started
+## Getting Started
 
 Here, we provide a quick installation of STREAMER. For the detailed installation and use check [Documentation] above.
 
@@ -37,7 +37,7 @@ Before we start the installation, you need to decide how you will use the framew
  - Development use: (oriented to data scientists). You are interested on directly working on the code of the framework to add/develop several functionalities and test them.
  - Product use: : (oriented to industrial use). You want to use the framework as a product (no need to get in contact with the code but execute STREAMER). In this case, you need to have in your computer the basic services STREAMER requires and STREAMER instance already packed.
 
-## 0) Download STREAMER
+### 0) Download STREAMER
 Download STREAMER source + environment setup from https://github.com/streamer-framework/streamer
 
 or
@@ -48,7 +48,7 @@ git clone https://github.com/streamer-framework/streamer.git
 ```
 
 
-## 1) Getting ready for Deployment use
+### 1) Getting ready for Deployment use
 
 In that case, you need to run the basic services that STREAMER requires. You can install them using the docker (recommended) following the steps of section 3.1, or install them yourself following section 4.
 
@@ -56,16 +56,16 @@ In that case, you need to run the basic services that STREAMER requires. You can
 
 2- Import the maven project: File->Import->Maven->Existing Maven Projects (and follow the steps to select the folder of STREAMER project).
 
-3- Create your first use case in STREAMER by following the steps of section 6.
+3- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
 
-4- Run your application in STREAMER as section 5 shows.
+4- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
 
 
 
-## 2) Getting ready for Production use
+### 2) Getting ready for Production use
 Try our example use case in STREAMER by following the steps of Section 3.
 
-## 3) Using Docker
+### 3) Using Docker
 We make simple and transparent the installation of STREAMER and its services by using Docker. We provide 2 docker files that serve to:
 
 a) Services environment (section 3.1): it contains all the services used by the framework (Kafka & Zookeeper, Redis. InfluxDB, Kibana & ElasticSearch).
@@ -73,7 +73,7 @@ a) Services environment (section 3.1): it contains all the services used by the 
 b) Production environment (section 3.2): it contains STREAMER for production purpose.
 
 
-### 3.1 Install & run all the services from Docker (recommended)
+#### 3.1 Install & run all the services from Docker (recommended)
 [Warning]: for Linux based systems, you may need to run all the commands in “sudo” mode as, for instance, “sudo docker-compose up --build -d “.
 Follow the following steps to set all necessary services before running STREAMER:
 
@@ -108,7 +108,7 @@ sudo sysctl -w vm.max_map_count=262144
 and then build the docker again with:
 sudo docker-compose up --build –d
 
-### 3.2 Running STREAMER in production environment
+#### 3.2 Running STREAMER in production environment
 [Warning]: for Linux based systems, you may need to run all the commands in “sudo” mode as, for instance, sudo docker-compose up --build -d.
 
 1- Before running STREAMER for production purpose, complete all the steps of case 1 above to run all the services.
