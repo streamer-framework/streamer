@@ -40,12 +40,11 @@ Before we start the installation, you need to decide how you will use the framew
 ### 0) Download STREAMER
 Download STREAMER source + environment setup from https://github.com/streamer-framework/streamer
 
-or
-
-Simply clone the repository:
+### Simply clone the repository:
 ```bash
 git clone https://github.com/streamer-framework/streamer.git
 ```
+You can already run the example use case we provide by 
 
 
 ### 1) Getting ready for Deployment use
@@ -56,10 +55,15 @@ In that case, you need to run the basic services that STREAMER requires. You can
 
 2- Import the maven project: File->Import->Maven->Existing Maven Projects (and follow the steps to select the folder of STREAMER project).
 
-3- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
+#### You are now ready to run our example use case:
 
-4- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
+3.0- Run from eclipse the main class ProducerMain.java to launch the data ingester.
 
+3.1- Run from eclipse the main class InvokerMain.java to launch the streaming pipeline.
+
+4- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
+
+5- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
 
 
 ### 2) Getting ready for Production use
