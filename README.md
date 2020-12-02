@@ -2,6 +2,8 @@
 STREAMER
 =================
 
+Check our [website](https://streamer-framework.github.io/index.html)
+
 ## Documentation
 
 The documentation is intended to give an introduction on how to use STREAMER in the various possible ways. 
@@ -20,8 +22,13 @@ The deployable jar for STREAMER will be in `target/STREAMER-Local-0.3.0-SNAPSHOT
 The use and distribution terms for this software are covered by the
 GNU GENERAL PUBLIC LICENSE Version 3 (https://www.gnu.org/licenses/gpl-3.0.html).
 
-## Contributors
-CEA List (LI3A)
+## Our Community
+
+Our community is formed by a group of AI researchers working for CEA List (LI3A) and their collaborators.
+
+The development of STREAMER is being supported by two collaborative projects (StreamOps and SmartWater4Europe) and CEA List.
+
+### Developers
 
 Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
 
