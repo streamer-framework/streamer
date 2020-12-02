@@ -4,8 +4,8 @@ STREAMER
 
 ## Documentation
 
-The documentation is intended to give an introduction on how to use Apache SAMOA in the various possible ways. 
-As a user you can use it to develop new algorithms and test different Distributed Stream Processing Engines.
+The documentation is intended to give an introduction on how to use STREAMER in the various possible ways. 
+As a user you can use it to develop new algorithms and test different Machine Learning algorithms in a streaming context.
 
 [Getting Started](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf)
 
@@ -13,7 +13,7 @@ As a user you can use it to develop new algorithms and test different Distribute
 
 [Javadoc](https://github.com/streamer-framework/streamer/streamer/docs/javadoc)
 
-The deployable jar for SMTREAMER will be in `target/STREAMER-Local-0.3.0-SNAPSHOT.jar`.
+The deployable jar for STREAMER will be in `target/STREAMER-Local-0.3.0-SNAPSHOT.jar`.
 
 ## License
 
