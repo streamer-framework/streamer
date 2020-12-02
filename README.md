@@ -55,18 +55,16 @@ In that case, you need to run the basic services that STREAMER requires. You can
 
 2- Import the maven project: File->Import->Maven->Existing Maven Projects (and follow the steps to select the folder of STREAMER project).
 
-#### ----------- [Optional] you are now ready to run our example use case:
+3- [Optional] you are now ready to run our example use case!
 
-3- Run from eclipse the main class ProducerMain to launch the data ingester.
+Run from eclipse the main class ProducerMain to launch the data ingester, or from console:
 ```bash
-java ProducerMain.java
+java ProducerMain
 ```
-Run from eclipse the main class LauncherMain to launch the streaming pipeline.
+Run from eclipse the main class LauncherMain to launch the streaming pipeline, or from console:
 ```bash
-java LauncherMain.java
+java LauncherMain
 ```
-#### ----------- 
-
 4- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
 
 5- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
