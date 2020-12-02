@@ -15,7 +15,7 @@ As a user you can use it to develop new algorithms and test different Machine Le
 
 [Javadoc](https://github.com/streamer-framework/streamer/streamer/docs/javadoc)
 
-The deployable jar for STREAMER will be in `target/STREAMER-Local-0.3.0-SNAPSHOT.jar`.
+The deployable jar for STREAMER will be in `target/streamer_1.0.jar`.
 
 ## License
 
