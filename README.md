@@ -2,7 +2,7 @@
 STREAMER
 =================
 
-Check our [website](https://streamer-framework.github.io/index.html)
+Check our [website](https://streamer-framework.github.io)
 
 ## Documentation
 
