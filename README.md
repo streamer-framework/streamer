@@ -41,8 +41,8 @@ Here, we provide a quick installation of STREAMER. For the detailed installation
 
 Before we start the installation, you need to decide how you will use the framework. STREAMER is conceived to be used in two different ways (depending on your necessities):
 
- - Development use: (oriented to data scientists). You are interested on directly working on the code of the framework to add/develop several functionalities and test them.
- - Product use: : (oriented to industrial use). You want to use the framework as a product (no need to get in contact with the code but execute STREAMER). In this case, you need to have in your computer the basic services STREAMER requires and STREAMER instance already packed.
+ - Development use (oriented to data scientists): You are interested on directly working on the code of the framework to add/develop several functionalities and test them.
+ - Product use (oriented to industrial use): You want to use the framework as a product (no need to get in contact with the code but execute STREAMER). In this case, you need to have in your computer the basic services STREAMER requires and STREAMER instance already packed.
 
 ### 0) Download STREAMER
 Download STREAMER source + environment setup from https://github.com/streamer-framework/streamer
