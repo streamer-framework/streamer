@@ -2,6 +2,8 @@
 STREAMER
 =================
 
+Check our [website](https://streamer-framework.github.io)
+
 ## Documentation
 
 The documentation is intended to give an introduction on how to use STREAMER in the various possible ways. 
@@ -13,15 +15,20 @@ As a user you can use it to develop new algorithms and test different Machine Le
 
 [Javadoc](https://github.com/streamer-framework/streamer/streamer/docs/javadoc)
 
-The deployable jar for STREAMER will be in `target/STREAMER-Local-0.3.0-SNAPSHOT.jar`.
+The deployable jar for STREAMER will be in `target/streamer_1.0.jar`.
 
 ## License
 
 The use and distribution terms for this software are covered by the
 GNU GENERAL PUBLIC LICENSE Version 3 (https://www.gnu.org/licenses/gpl-3.0.html).
 
-## Contributors
-CEA List (LI3A)
+## Our Community
+
+Our community is formed by a group of AI researchers working for CEA List (LI3A) and their collaborators.
+
+The development of STREAMER is being supported by two collaborative projects (StreamOps and SmartWater4Europe) and CEA List.
+
+### Developers
 
 Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
 
@@ -34,18 +41,17 @@ Here, we provide a quick installation of STREAMER. For the detailed installation
 
 Before we start the installation, you need to decide how you will use the framework. STREAMER is conceived to be used in two different ways (depending on your necessities):
 
- - Development use: (oriented to data scientists). You are interested on directly working on the code of the framework to add/develop several functionalities and test them.
- - Product use: : (oriented to industrial use). You want to use the framework as a product (no need to get in contact with the code but execute STREAMER). In this case, you need to have in your computer the basic services STREAMER requires and STREAMER instance already packed.
+ - Development use (oriented to data scientists): You are interested on directly working on the code of the framework to add/develop several functionalities and test them.
+ - Product use (oriented to industrial use): You want to use the framework as a product (no need to get in contact with the code but execute STREAMER). In this case, you need to have in your computer the basic services STREAMER requires and STREAMER instance already packed.
 
 ### 0) Download STREAMER
 Download STREAMER source + environment setup from https://github.com/streamer-framework/streamer
 
-or
-
-Simply clone the repository:
+### Simply clone the repository:
 ```bash
 git clone https://github.com/streamer-framework/streamer.git
 ```
+You can already run the example use case we provide by 
 
 
 ### 1) Getting ready for Deployment use
@@ -56,10 +62,19 @@ In that case, you need to run the basic services that STREAMER requires. You can
 
 2- Import the maven project: File->Import->Maven->Existing Maven Projects (and follow the steps to select the folder of STREAMER project).
 
-3- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
+3- [Optional] you are now ready to run our example use case!
 
-4- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
+Run from eclipse the main class ProducerMain to launch the data ingester, or from console:
+```bash
+java ProducerMain
+```
+Run from eclipse the main class LauncherMain to launch the streaming pipeline, or from console:
+```bash
+java LauncherMain
+```
+4- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
 
+5- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
 
 
 ### 2) Getting ready for Production use
