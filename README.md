@@ -145,3 +145,11 @@ If you started the framework without using (-d) property, first press (ctrl + c)
 ```bash
 docker-compose down
 ```
+
+### 4) Install services yourself
+
+STREAMER use the following services that you can install yourself:
+- [Zookeeper & apache Kafka](https://kafka.apache.org/quickstart) / soft / Apache License 2.0 / version=2.6 
+- [Redis](https://redis.io/) / soft / BSD / version= 6.0.9 
+- [Influxdb](https://portal.influxdata.com/) / soft / MIT / version 2.0
+- [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version=7.10.1 
