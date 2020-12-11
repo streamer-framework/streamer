@@ -76,6 +76,18 @@ java LauncherMain
 
 5- Run your application in STREAMER as section 5 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf) shows.
 
+#### Important:
+for running our use case example or our proposed Python or R algorithms do not forget installing the packages they need in your computer. 
+
+Python:
+```bash
+pip3 -r install services/requirementsPython.txt
+```
+R (services/requirementsR.txt):
+```bash
+install.packages(c("caret","RCurl","rredis", "kernlab", "e1071", "h2o","neuralnet","xgboost"))
+```
+
 
 ### 2) Getting ready for Production use
 Try our example use case in STREAMER by following the steps of Section 3.
