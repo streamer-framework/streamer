@@ -85,7 +85,7 @@ pip3 -r install services/requirementsPython.txt
 ```
 R (services/requirementsR.txt):
 ```bash
-install.packages(c("caret","RCurl","rredis", "kernlab", "e1071", "h2o","neuralnet","xgboost"))
+install.packages(c("caret","RCurl","rredis", "kernlab", "e1071", "neuralnet","xgboost"))
 ```
 
 
