@@ -1,2 +1,5 @@
-target
-diagram.*
+STREAMER/target
+STREAMER/diagram.*
+STREAMER/json
+STREAMER/logs
+STREAMER/.*

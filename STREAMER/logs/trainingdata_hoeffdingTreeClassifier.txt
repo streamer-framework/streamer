@@ -1,7 +1,0 @@
-2020-12-16 13:45:42.183226: the size of the list from redis is: 198
-2020-12-16 13:46:12.154305: the size of the list from redis is: 150
-2020-12-16 13:46:32.375306: the size of the list from redis is: 104
-2020-12-16 13:47:01.952625: the size of the list from redis is: 146
-2020-12-16 13:47:22.199507: the size of the list from redis is: 100
-2020-12-16 13:47:42.350406: the size of the list from redis is: 100
-2020-12-16 13:48:12.276766: the size of the list from redis is: 150
