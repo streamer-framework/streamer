@@ -15,8 +15,6 @@ As a user you can use it to develop new algorithms and test different Machine Le
 
 [Javadoc](https://github.com/streamer-framework/streamer/streamer/docs/javadoc)
 
-The deployable jar for STREAMER will be in `target/streamer_1.0.jar`.
-
 ## License
 
 The use and distribution terms for this software are covered by the
@@ -164,4 +162,4 @@ STREAMER uses the following services that you can easily install yourself:
 - [Zookeeper & apache Kafka](https://kafka.apache.org/quickstart) / soft / Apache License 2.0 / version=2.6 
 - [Redis](https://redis.io/) / soft / BSD / version= 6.0.9 
 - [InfluxDB](https://portal.influxdata.com/) / soft / MIT / version 2.0
-- [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version=7.10.1 
+- [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version=7.10.1 [Optional service, just for using the Graphical Interface]
