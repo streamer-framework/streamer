@@ -1,0 +1,23 @@
+FROM openjdk:slim
+COPY --from=python:3.6 / /
+
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install dependencies:
+COPY requirements.txt framework/requirements.txt
+RUN python -m pip install --upgrade pip
+RUN pip install -r framework/requirements.txt
+
+
+ADD ./dsplatform-1.0.0-test-jar-with-dependencies.jar framework/dsplatform.jar
+#ADD ./resources framework/resources
+
+# Run the application:
+CMD java -cp framework/dsplatform.jar cea.streamer.LauncherMain kdd-cup-99_23class
+
+
+
+
+

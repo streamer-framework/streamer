@@ -1,0 +1,4 @@
+install.packages(c("caret","RCurl","rredis", "kernlab", "e1071", "neuralnet","xgboost"))
+
+
+

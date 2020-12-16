@@ -1,0 +1,6 @@
+host = http://localhost:8086
+username = root
+password = root
+
+dbName = dstest
+Point.measurement = ds
