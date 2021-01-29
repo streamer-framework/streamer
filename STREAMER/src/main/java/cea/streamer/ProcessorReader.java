@@ -425,7 +425,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 			MLalgorithms alg = (MLalgorithms) algC.getDeclaredConstructor().newInstance();
 
 			/************** TRAINING ***********************/
-			if ((trainingInterval >= 0) && ((currentTime - previuosTrainingTime) >= trainingInterval)) {// shall we run
+			if ((trainingInterval >= 0) && ((currentTime - previuosTrainingTime) >= trainingInterval) && !records.isEmpty()) {// shall we run
 																										// the training
 				String captName = records.get(0).getName();
 				Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(captName.toLowerCase(), trainingMaxData,
@@ -438,7 +438,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 					Thread trainingThread = new Thread() {
 						public void run() {
 							Log.displayLogTrain
-									.info("\n ####### New Model for " + id + " (Trained from InfluxDB): #######\n ");
+									.info("\n"+id+": ####### New Model (trained from InfluxDB): #######\n ");
 							alg.learn(recordsDB, id);
 						}
 					};
@@ -458,16 +458,22 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 			System.err.println("The type of algorithm specified does not exist. Platform is being interrupted");
 			e.printStackTrace();
 		}
-
+		
 		// Call the metrics if there is any
 		Map<Metric, Vector<Double>> metricsEvaluation = new HashMap<Metric, Vector<Double>>();
 		if (metrics != null) {
 			for (Metric metric : metrics) {
-				metricsEvaluation.put(metric, metric.evaluate(records, id));
+				Vector<Double> values = metric.evaluate(records, id);
+				metricsEvaluation.put(metric, values);
+				String metricLog = (id+": "+metric.getName()+" =");
+				for(double d:values) {
+					metricLog+=(" "+d);
+				}				
+				Log.metricsLog.info(metricLog);
 			}
 		}
 		//TODO: store in files
-		if (!metricsEvaluation.isEmpty() && visualization) {	
+		if (!metricsEvaluation.isEmpty() && visualization) {
 			ElasticSearchConnector.init();
 			ElasticSearchConnector.ingestMetricValues(metricsEvaluation, id);
 		}

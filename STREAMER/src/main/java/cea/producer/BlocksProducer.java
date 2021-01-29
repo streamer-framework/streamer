@@ -54,6 +54,7 @@ public class BlocksProducer implements IProducer{
 		long maxBlocks;
 		long recordsPerBlock;
 		long producerTimeInterval;	//in milliseconds
+		boolean containHeaders = false;
 	    try (InputStream props = Resources.getResource("setup/"+origin+"streaming.props").openStream()) {
 		    Properties properties = new Properties();
 		    properties.load(props);            
@@ -62,17 +63,22 @@ public class BlocksProducer implements IProducer{
 		    topics= (properties.getProperty("mainTopic").trim()).split(",");
 		    maxBlocks = Long.parseLong( properties.getProperty("maxBlocks") );
 		    recordsPerBlock = Long.parseLong( properties.getProperty("recordsPerBlock") );
-		    producerTimeInterval = Long.parseLong( properties.getProperty("producerTimeInterval") ); 
+		    producerTimeInterval = Long.parseLong( properties.getProperty("producerTimeInterval") );
+		    if (properties.containsKey("containsHeader")) { 
+		    	containHeaders = Boolean.parseBoolean(properties.getProperty("containsHeader").trim().toLowerCase());
+		    }
 	    }
 	    
 		ProcessRawLines reader = new ProcessRawLines();
 	   
         String line=null;
-		BufferedReader br=Files.newBufferedReader(path);
+		BufferedReader br=Files.newBufferedReader(path);		
 		int countBlocks = 0;
 		String[] key_value=null;
 		try{
-			do{	        
+			if(containHeaders)
+				br.readLine();
+			do{	
 				for(int i =0; i< recordsPerBlock; i++){//send from 5 to 5 every 10 seconds
 					line = br.readLine();
 					key_value = reader.processRecords(path.toString(),line);

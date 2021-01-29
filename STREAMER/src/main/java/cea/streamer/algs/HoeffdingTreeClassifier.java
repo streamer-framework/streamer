@@ -21,7 +21,7 @@ public class HoeffdingTreeClassifier extends MLalgorithms {
 		//this method represent the training/learning phase
 		//System.out.println(" train " + data);
 		// the path of the training file to perform the training from python
-		String learningFile = new GlobalUtils().getAbsoluteBaseProjectPath() + "/src/main/resources/algs/HoeffdingTreeClassifierTrain.py";
+		String learningFile = new GlobalUtils().getAbsoluteBaseProjectPath() + "src/main/resources/algs/HoeffdingTreeClassifierTrain.py";
 		// push the data to Redis to be available for the python training file
 		RedisConnector.dataToRedis(data, "datatrain"+id);
 		// execute the training phase
@@ -33,7 +33,7 @@ public class HoeffdingTreeClassifier extends MLalgorithms {
 		//System.out.println(" test " + data);
 		//System.out.println(data.size() + "");
 		// the path of the testing file to perform the prediction from python
-		String testFile = new GlobalUtils().getAbsoluteBaseProjectPath() + "/src/main/resources/algs/HoeffdingTreeClassifierTest.py";
+		String testFile = new GlobalUtils().getAbsoluteBaseProjectPath() + "src/main/resources/algs/HoeffdingTreeClassifierTest.py";
 		// push the data to Redis to be available for the python testing file
 		RedisConnector.dataToRedis(data, "datatest"+id);
 		// execute the testing phase

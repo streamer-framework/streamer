@@ -3,3 +3,4 @@ STREAMER/diagram.*
 STREAMER/json
 STREAMER/logs
 STREAMER/.*
+STREAMER/bin

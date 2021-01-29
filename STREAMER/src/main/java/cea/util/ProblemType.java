@@ -8,7 +8,9 @@ package cea.util;
 
 public enum ProblemType {
 	
-	KDDClassification("WaterPollutionRecord","yyyy-MM-dd");
+	LeakDetection("LeakDetectionRecord","dd-MMM-yyyy"),
+	LeakDetectionDaily("LeakDetectionDailyRecord","dd-MMM-yyyy"),
+	WaterPollution("WaterPollutionRecord","yyyy-MM-dd");
 	
 	/**
 	 * recordClass that we should use for process records, according to the problem we are working about

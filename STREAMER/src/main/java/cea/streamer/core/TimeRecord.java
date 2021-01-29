@@ -3,6 +3,7 @@ package cea.streamer.core;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -25,6 +26,11 @@ public abstract class TimeRecord implements Serializable{
 	 * Source of the data
 	 */
 	protected String source = null;
+	
+	/**
+	 * Headers of the data
+	 */
+	protected ArrayList<String> headers = null;
 	
 	/**
 	 * Values of the time record
@@ -64,6 +70,7 @@ public abstract class TimeRecord implements Serializable{
 		timestamp = Calendar.getInstance().toString();
 		values = new LinkedHashMap<String, String>();//TreeMap<String, String>();
 		extractors = new TreeMap<String, Extractor>();
+		headers = new ArrayList<String>();
 	}
 	
 	
@@ -286,10 +293,15 @@ public abstract class TimeRecord implements Serializable{
 	/**
 	 * @return the name, the timestamp and the values of the time record
 	 */
-	public void importValues(String line){
+	public void importValues(String line){	
 		String[] vals = line.split(separator);
+		
 		for(int i=0; i< vals.length; i++){
-			values.put("value"+i,vals[i]);			
+			if(!headers.isEmpty()) {
+				values.put(headers.get(i), vals[i]);
+			} else {
+				values.put("value"+i,vals[i]);				
+			}		
 		}
 	}
 	

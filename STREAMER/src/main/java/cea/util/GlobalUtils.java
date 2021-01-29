@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -19,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 import cea.streamer.core.TimeRecord;
 import cea.util.connectors.RedisConnector;
@@ -352,8 +357,19 @@ public class GlobalUtils {
 	 * @return absolute project path (base.dir)
 	 */
 	public String getAbsoluteBaseProjectPath() {
+		MavenXpp3Reader reader = new MavenXpp3Reader();
+		String project_name = "STREAMER";
+        try {
+			Model model = reader.read(new FileReader("pom.xml"));
+			project_name = model.getName();
+			
+		} catch (IOException | XmlPullParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		String aux = this.getClass().getClassLoader().getResource("algs/neuralNetworkTrain.R").toString();	
-		String projectTree = "streamer/STREAMER/";
+		String projectTree = project_name + "/";//"dsplatform/STREAMER/";
 		aux = aux.replace("file:", "");
 		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 			// MA261439 added this for windows users

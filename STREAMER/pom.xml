@@ -41,37 +41,22 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 			<artifactId>maven-plugin-annotations</artifactId>
 			<version>3.6.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>3.8.1</version>
 			<scope>test</scope>
-		</dependency>
-
-<!-- 		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka-clients</artifactId>
-			<version>2.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.kafka</groupId>
-			<artifactId>kafka-streams</artifactId>
-			<version>2.6.0</version>
-		</dependency>
--->
+		</dependency>			
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-clients</artifactId>
-			<version>2.3.0</version>
-		</dependency>
-		
+			<version>2.7.0</version>
+		</dependency>		
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
 			<artifactId>kafka-streams</artifactId>
-			<version>2.3.0</version>
-		</dependency> 
-
+			<version>2.7.0</version>
+		</dependency> 		
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -87,7 +72,6 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 			<artifactId>jackson-databind</artifactId>
 			<version>2.5.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -101,28 +85,25 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 		<dependency>
 			<groupId>org.influxdb</groupId>
 			<artifactId>influxdb-java</artifactId>
-			<version>2.5</version>
+			<version>2.21</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rosuda.REngine</groupId>
 			<artifactId>REngine</artifactId>
 			<version>2.1.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.renjin</groupId>
 			<artifactId>renjin-script-engine</artifactId>
 			<version>RELEASE</version>
 		</dependency>
-
 		<dependency>
 			<groupId>redis.clients</groupId>
 			<artifactId>jedis</artifactId>
-			<version>3.3.0</version>
+			<version>3.4.1</version>		
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>com.github.lucarosellini.rJava</groupId>
 			<artifactId>REngine</artifactId>
@@ -143,7 +124,6 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 			<artifactId>Rserve</artifactId>
 			<version>1.8.1</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/weka-stable -->
 		<dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
 			<artifactId>weka-stable</artifactId>
@@ -169,13 +149,6 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 			<artifactId>DateParser</artifactId>
 			<version>0.3.0</version>
 		</dependency>
-		<!-- <dependency> <groupId>org.apache.kafka</groupId> <artifactId>kafka-clients</artifactId> 
-			<version>5.4.1-ccs</version> </dependency> <dependency> <groupId>io.confluent</groupId> 
-			<artifactId>monitoring-interceptors</artifactId> <version>5.3.1</version> 
-			</dependency> -->
-
-		<!-- <dependency> <groupId>org.rosuda</groupId> <artifactId>JRI</artifactId> 
-			<version>1.0</version> </dependency> -->
 		<dependency>
 			<groupId>org.apache.directory.studio</groupId>
 			<artifactId>org.apache.commons.io</artifactId>
@@ -184,14 +157,18 @@ http://maven.apache.org/xsd/maven-4.0.0.xsd">
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
-			<version>7.6.0</version>
+			<version>7.10.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.10.2</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-model</artifactId>
+			<version>3.3.9</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>

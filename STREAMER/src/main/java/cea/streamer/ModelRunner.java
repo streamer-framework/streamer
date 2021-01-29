@@ -93,7 +93,7 @@ public class ModelRunner {
 			}	
 			path = Paths.get( properties.getProperty("datafile") );
 			System.out.println(path);
-			Log.displayLogTrain.info(path);
+			Log.displayLogTrain.info(origin+": "+path);
         }catch (IOException e) {
 			e.printStackTrace();
 		}

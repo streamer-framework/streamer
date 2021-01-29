@@ -60,7 +60,7 @@ public class Trainer {
 		    	trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));
 	            path = Paths.get( properties.getProperty("training.source") );
 	            System.out.println(path);
-				Log.displayLogTrain.info(path);				
+				Log.displayLogTrain.info(origin+": "+path);				
 	 	} catch (IOException e) {
 			e.printStackTrace();
 		}		

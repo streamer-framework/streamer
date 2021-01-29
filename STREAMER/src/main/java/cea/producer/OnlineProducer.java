@@ -59,7 +59,7 @@ public class OnlineProducer implements IProducer {
 		long epsilonne; //in milliseconds
 		long scale; //in milliseconds
 		String problemType;
-		
+		boolean containHeaders = false;
 	    try (InputStream props = Resources.getResource("setup/"+origin+"streaming.props").openStream()) {
 		    Properties properties = new Properties();
 		    properties.load(props);            
@@ -72,6 +72,9 @@ public class OnlineProducer implements IProducer {
 		    epsilonne = Long.parseLong( properties.getProperty("epsilonne") ); 
 		    scale = Long.parseLong( properties.getProperty("scale") );
 		    problemType = properties.getProperty("problem.type").trim();
+		    if (properties.containsKey("containsHeader")) { 
+		    	containHeaders = Boolean.parseBoolean(properties.getProperty("containsHeader").trim().toLowerCase());
+		    }
 	    }
 	    
 		ProcessRawLines reader = new ProcessRawLines();
@@ -87,7 +90,8 @@ public class OnlineProducer implements IProducer {
 		LocalDateTime previousRecordDateTimeAfterSimulation = LocalDateTime.now();
 		
 		try{
-			
+			if(containHeaders)
+				br.readLine();
 			do{	        
 				
 				for(int i =0; i< recordsPerBlock; i++){//send from 5 to 5 every 10 seconds

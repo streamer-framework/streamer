@@ -1,4 +1,6 @@
+#bootstrap.servers=10.0.238.12:9092
 bootstrap.servers=localhost:9092
+#bootstrap.servers=http://kafka:29092
 
 visualization = true
 
@@ -12,14 +14,23 @@ key.serializer=org.apache.kafka.common.serialization.StringSerializer
 value.serializer=org.apache.kafka.common.serialization.StringSerializer
 block.on.buffer.full=true
 
-maxBlocks = 1000
-recordsPerBlock = 50
-producerTimeInterval = 10000
-#recordsPerBlock = 50
-#producerTimeInterval = 14000
+containsHeader = true
 
 # The path of the data used in the kdd cup 99 cybersecurity project (online classification algorithm)
 datafile = ../data/data_kdd-cup-99/multiclass_classification_kdd_cup_99.csv
+
+### Production Type (ONLINE /OFFLINE)
+producerType = OFFLINE
+
+## Production ONLINE
+epsilonne = -3000
+scale = 1800
+
+## Production OFFLINE (by blocks)
+maxBlocks = 1000
+recordsPerBlock = 50
+producerTimeInterval = 10000
+
 
 ### Production Type (ONLINE /OFFLINE)
 producerType = OFFLINE
@@ -47,4 +58,4 @@ problem.type = KDDClassification
 outputTopic = OutputPlatformKDDB
 
 #### Common Params
-mainTopic = topic_kddmulticlassTestM22
+mainTopic = topic_kddmulticlass

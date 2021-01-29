@@ -16,14 +16,15 @@ import java.io.IOException;
 public class Log {
 
 	public static boolean showDebug = false;
+	
 	public static final Logger infoLog = (Logger) Logger.getLogger("infoLog");
-	public static final Logger quantileLog = (Logger) Logger.getLogger("quantileLog");
 	public static final Logger displayLogTrain = (Logger) Logger.getLogger("displayLogTrain");
 	public static final Logger displayLogTest = (Logger) Logger.getLogger("displayLogTest");
 	public static final Logger errorLog = (Logger) Logger.getLogger("errorLog");
+	public static final Logger metricsLog = (Logger) Logger.getLogger("metricsLog");
 
-	public static void separate(Logger log, String scriptFileName) {
-		log.info("\n############################################  " + scriptFileName +"  #####################################################\n");
+	public static void separate(Logger log, String text) {
+		log.info("\n##############  " + text +"  ##############\n");
 	}
 
 	public static void clearLogs() {

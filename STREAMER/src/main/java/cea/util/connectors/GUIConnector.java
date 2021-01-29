@@ -149,7 +149,7 @@ public class GUIConnector {
 				}
 			}
 
-			Log.displayLogTest.info("\n######### New Confusion Matrix for " + id + " #########\n");
+			Log.displayLogTest.info("\n"+id+": ######### New Confusion Matrix #########\n");
 			Log.displayLogTest.info("          Ref 0    Ref 1");
 			Log.displayLogTest.info("Pred 0        " + confMat[0] + "            " + confMat[2]);
 			Log.displayLogTest.info("Pred 1        " + confMat[1] + "            " + confMat[3]);

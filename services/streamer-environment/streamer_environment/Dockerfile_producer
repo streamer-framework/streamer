@@ -1,0 +1,12 @@
+FROM openjdk:slim
+
+ADD ./streamer-1.0.0-test-jar-with-dependencies.jar framework/streamer.jar
+ADD ./data data
+
+# Run the application:
+CMD java -cp framework/streamer.jar cea.ProducerMain kdd-cup-99_23class
+
+
+
+
+

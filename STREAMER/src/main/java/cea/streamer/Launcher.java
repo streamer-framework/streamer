@@ -26,6 +26,7 @@ import com.google.common.io.Resources;
 
 import cea.util.Log;
 import cea.util.connectors.InfluxDBConnector;
+import cea.util.connectors.KibanaConnector;
 import cea.util.connectors.RedisConnector;
 
 /**
@@ -70,6 +71,19 @@ public class Launcher {
 		String outputTopic = null;
 		try (InputStream props = Resources.getResource("setup/" + origins[0] + "/" + "streaming.props").openStream()) {
 			streamsConfiguration.load(props);
+		}
+		
+		try {
+			if (streamsConfiguration.containsKey("visualization")) { 
+				boolean visualization = Boolean.parseBoolean( streamsConfiguration.getProperty("visualization").toLowerCase());
+				if(visualization) {
+					// Import Kibana metrics dashboard
+					KibanaConnector.init();
+					KibanaConnector.importMetricsDashboard();
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("visualisation\" field in streaming.props must be \"true\" or \"false\".");
 		}
 
 		streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "PlatformTest");

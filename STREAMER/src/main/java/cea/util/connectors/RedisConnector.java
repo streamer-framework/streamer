@@ -120,7 +120,7 @@ public class RedisConnector {
 		jedis.close();
 	}
 	
-	//if there is any output ///terminar!!!
+	
 	public static Vector<TimeRecord> retreiveOutput(Vector<TimeRecord> data, String key) {
 		Jedis jedis = getJedis();
 				
@@ -138,9 +138,9 @@ public class RedisConnector {
 			/*	while(outputs[i].trim().equals("") && i<outputs.length) {
 					i++;	
 				}	*/
-				if(i<outputs.length) {
+				if(i != outputs.length) {
 					record.setOutput(outputs[i]);
-				}else{
+				}else {
 					error = true;
 					System.err.println("Output not matching the time records input");
 				}

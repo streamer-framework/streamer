@@ -64,11 +64,11 @@ In that case, you need to run the basic services that STREAMER requires. You can
 
 Run from eclipse the main class ProducerMain to launch the data ingester, or from console:
 ```bash
-java ProducerMain
+java -cp target/streamer-1.0.0-test-jar-with-dependencies.jar cea.ProducerMain [setup_folder]
 ```
 Run from eclipse the main class LauncherMain to launch the streaming pipeline, or from console:
 ```bash
-java LauncherMain
+java -cp target/streamer-1.0.0-test-jar-with-dependencies.jar cea.LauncherMain [setup_folder]
 ```
 4- Create your first use case in STREAMER by following the steps of section 6 of the [user guide](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf).
 
@@ -159,7 +159,7 @@ docker-compose down
 ### 4) Install services yourself
 
 STREAMER uses the following services that you can easily install yourself:
-- [Zookeeper & apache Kafka](https://kafka.apache.org/quickstart) / soft / Apache License 2.0 / version=2.6 
-- [Redis](https://redis.io/) / soft / BSD / version= 6.0.9 
+- [Apache Kafka (with Zookeeper)](https://kafka.apache.org/quickstart) / soft / Apache License 2.0 / version=2.7 
+- [Redis](https://redis.io/) / soft / BSD / version= 6.0.10 
 - [InfluxDB](https://portal.influxdata.com/) / soft / MIT / version 2.0
 - [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version=7.10.1 [Optional service, just for using the Graphical Interface]

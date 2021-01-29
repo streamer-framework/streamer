@@ -17,17 +17,17 @@ public class CodeConnectors {
 	 *
 	 * @param scriptFileName the path of the R script
 	 */
-	public static void execRFile(String scriptFileName, String args) {
+	public static void execRFile(String scriptFileName, String id) {
 		String redisIP =  RedisConnector.getRedisIP();
 		String redisPort = RedisConnector.getRedisPort();
 		try {
-			System.out.println("Start executing " + scriptFileName + " with args " + args+ " " + redisIP + " " + redisPort);
-			Process p = Runtime.getRuntime().exec("Rscript " + scriptFileName + " " + args+ " " + redisIP + " " + redisPort);
+			System.out.println(id+": Starts execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
+			Process p = Runtime.getRuntime().exec("Rscript " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
 			p.waitFor();
 
 			//Separating logs between two executions
-			Log.separate(Log.infoLog, scriptFileName);
-			Log.separate(Log.errorLog, scriptFileName);
+			Log.separate(Log.infoLog, id+": "+scriptFileName);
+			Log.separate(Log.errorLog, id+": "+scriptFileName);
 
 			//Read Outputs
 			BufferedReader reader = new BufferedReader(
@@ -52,11 +52,11 @@ public class CodeConnectors {
 				Log.errorLog.info(lineErr);
 			}
 
-			System.out.println("Finish executing " + scriptFileName + " with args " + args+ " " + redisIP + " " + redisPort);
+			System.out.println(id+": Finishes execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
 
 			//Send data to JSON
 			if (scriptFileName.contains("Test")) {
-				String jsonFileName = "./json/result" + args + ".json";
+				String jsonFileName = "./json/result" + id + ".json";
 				GUIConnector.resultToJSON(lastLine, jsonFileName);
 			}
 
@@ -69,12 +69,12 @@ public class CodeConnectors {
 	 * Method that executes in command line a Python script and prints the output into a log file
 	 * 
 	 * @param scriptFileName the path of the Python script
-	 * @param args the arguments needed for the Python script (if needed)
+	 * @param id the arguments needed for the Python script (if needed)
 	 */
-	public static String execPyFile(String scriptFileName, String args) {
+	public static String execPyFile(String scriptFileName, String id) {
 		String redisIP =  RedisConnector.getRedisIP();
 		String redisPort =  RedisConnector.getRedisPort();
-		System.out.println("Starting executing " + scriptFileName + " with args " + args+ " " + redisIP + " " + redisPort);
+		System.out.println(id+": Starts execution " + scriptFileName + " with args " + id+ " " + redisIP + " " + redisPort);
 		String lastLine = "";
 
 		try {
@@ -85,22 +85,22 @@ public class CodeConnectors {
 			
 			if (OS.startsWith("windows")) {
 				ProcessBuilder pb = new ProcessBuilder();
-				pb.command("cmd", "/c", "conda activate ts_env && python " + scriptFileName + " " + args+ " " + redisIP + " " + redisPort);
+				pb.command("cmd", "/c", "conda activate ts_env && python " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
 				p = pb.start();
 			} else if (OS.equals("linux")) {//MAC
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " + args+ " " + redisIP + " " + redisPort);
+				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
 				p.waitFor();			
 			} else if (OS.equals("mac")) {//MAC
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " + args+ " " + redisIP + " " + redisPort);
+				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
 				p.waitFor();
 			} else if (OS.equals("nix") || OS.equals("nux") || OS.equals("aix") ) {//UNIX
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " + args+ " " + redisIP + " " + redisPort);
+				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
 				p.waitFor();
 			} 
 			
 			// Separating logs between two executions
-			Log.separate(Log.infoLog, scriptFileName);
-			Log.separate(Log.errorLog, scriptFileName);
+			Log.separate(Log.infoLog, id+": "+scriptFileName);
+			Log.separate(Log.errorLog, id+": "+scriptFileName);
 
 			// Read Outputs
 			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -122,7 +122,7 @@ public class CodeConnectors {
 			}
 			
 			p.waitFor();
-			System.out.println("Finish executing " + scriptFileName + " with args " + args+ " " + redisIP + " " + redisPort);
+			System.out.println(id+": Finishes execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
 			
 			//Send data to JSON
 			/*if (scriptFileName.toLowerCase().contains("test")) {

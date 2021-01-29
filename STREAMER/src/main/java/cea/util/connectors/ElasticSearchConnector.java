@@ -201,7 +201,7 @@ public class ElasticSearchConnector {
 			insertRequest.source(obj.toJSONString(), XContentType.JSON);
 			client.index(insertRequest, RequestOptions.DEFAULT);
 			client.indices().refresh(new RefreshRequest(evaluationindex), RequestOptions.DEFAULT);
-			System.out.println("Metrics ingested in ES");
+
 		} catch (Exception ex) {
 			ex.printStackTrace(System.err);
 		}

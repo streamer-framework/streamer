@@ -47,7 +47,7 @@ public class AlgInvokerMain_offline {
 		
 		Vector<TimeRecord> records;
 		if(train) {
-			Log.displayLogTrain.info("\n #### New Model for " + origin + " (trained offline from "+dataSourceType+") ####\n ");
+			Log.displayLogTrain.info("\n"+origin+": #### New Model (trained offline from "+dataSourceType+") ####\n ");
 			
 			Trainer trainer = new Trainer();
 			records = trainer.trainAll(dataSourceType, origin, modelStoredPath);
@@ -56,7 +56,7 @@ public class AlgInvokerMain_offline {
 		}
 		
 		if(test) {
-			Log.displayLogTest.info("\n #### Model of " + origin + " (run offline from "+dataSourceType+") ####\n ");
+			Log.displayLogTest.info("\n"+origin+": #### New Model (run offline from "+dataSourceType+") ####\n ");
 
 			ModelRunner model = new ModelRunner();
 			records= model.run(dataSourceType, origin, modelStoredPath);
