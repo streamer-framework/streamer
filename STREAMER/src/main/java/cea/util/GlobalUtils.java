@@ -359,13 +359,14 @@ public class GlobalUtils {
 	public String getAbsoluteBaseProjectPath() {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		String project_name = "STREAMER";
-        try {
+        
+		try {
 			Model model = reader.read(new FileReader("pom.xml"));
 			project_name = model.getName();
 			
 		} catch (IOException | XmlPullParserException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		
 		String aux = this.getClass().getClassLoader().getResource("algs/neuralNetworkTrain.R").toString();	

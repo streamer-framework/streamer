@@ -1,1 +1,5 @@
+# dev 
 host = localhost
+
+#prod
+#host = http://redis:6379

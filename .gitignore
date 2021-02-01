@@ -4,3 +4,4 @@ STREAMER/json
 STREAMER/logs
 STREAMER/.*
 STREAMER/bin
+/.metadata/

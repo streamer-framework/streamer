@@ -1,4 +1,8 @@
+# dev
 host = localhost
+
+# prod
 #host = http://elasticsearch:9200
+
 index.evaluation = evaluationindex
 index.rawdata = rawdataindex

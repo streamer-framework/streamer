@@ -1,4 +1,8 @@
+# dev
 host = http://localhost:8086
+
+# prod
+#host = http://influxdb:8086
 username = root
 password = root
 
