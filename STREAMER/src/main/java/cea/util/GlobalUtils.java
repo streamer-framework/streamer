@@ -359,16 +359,19 @@ public class GlobalUtils {
 	public String getAbsoluteBaseProjectPath() {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		String project_name = "STREAMER";
-        
-		try {
-			Model model = reader.read(new FileReader("pom.xml"));
-			project_name = model.getName();
-			
-		} catch (IOException | XmlPullParserException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-		}
+		File pom_file = new File("pom.xml");
 		
+		
+		if(pom_file.exists()) {
+			try {
+				Model model = reader.read(new FileReader(pom_file));
+				project_name = model.getName();
+				
+			} catch (IOException | XmlPullParserException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		String aux = this.getClass().getClassLoader().getResource("algs/neuralNetworkTrain.R").toString();	
 		String projectTree = project_name + "/";//"dsplatform/STREAMER/";
 		aux = aux.replace("file:", "");
