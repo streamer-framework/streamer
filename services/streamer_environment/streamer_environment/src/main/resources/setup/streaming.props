@@ -1,8 +1,8 @@
 # dev
-#bootstrap.servers=localhost:9092
+bootstrap.servers=localhost:9092
 
 # prod
-bootstrap.servers=http://kafka:29092
+#bootstrap.servers=http://kafka:29092
 
 visualization = true
 
