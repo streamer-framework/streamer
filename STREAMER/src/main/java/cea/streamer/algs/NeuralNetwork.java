@@ -35,13 +35,13 @@ public class NeuralNetwork extends MLalgorithms {
 	
 	public NeuralNetwork() {		
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/neuralNetwork.props").openStream()) {			
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"neuralNetwork.props").openStream()) {			
 			properties.load(props);
-			regressionProblem = properties.getProperty("regression.problem").trim();
-			hiddenLayers = properties.getProperty("hidden.layers").trim();
-			seed = properties.getProperty("seed").trim();
-			dependantVariable = properties.getProperty("dependant.variable").trim();
-			predicatorVariables = properties.getProperty("predicator.variables").trim();		
+			regressionProblem = properties.getProperty("regression.problem").replace(" ","");
+			hiddenLayers = properties.getProperty("hidden.layers").replace(" ","");
+			seed = properties.getProperty("seed").replace(" ","");
+			dependantVariable = properties.getProperty("dependant.variable").replace(" ","");
+			predicatorVariables = properties.getProperty("predicator.variables").replace(" ","");		
 		}catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -71,7 +71,7 @@ public class NeuralNetwork extends MLalgorithms {
 	public void learn(Vector<TimeRecord> data, String id) {
 		storeParams(id);
 		String learningFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/neuralNetworkTrain.R";		
-		RedisConnector.dataToRedis(data, "datatrain" + id);		
+		RedisConnector.dataToRedis(data,RedisConnector.DATATRAIN_TAG, id);		
 		CodeConnectors.execRFile(learningFile, id);
 	}
 
@@ -79,10 +79,10 @@ public class NeuralNetwork extends MLalgorithms {
 	public void run(Vector<TimeRecord> data, String id) {		
 		storeParams(id);
 		String testFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/neuralNetworkTest.R";
-		RedisConnector.dataToRedis(data, "dataTest"+id);
+		RedisConnector.dataToRedis(data,RedisConnector.DATATEST_TAG, id);
 		CodeConnectors.execRFile(testFile, id);		
 		
-		RedisConnector.retreiveOutput(data, id);
+		RedisConnector.retrieveOutput(data,id);
 	}
 
 	@Override

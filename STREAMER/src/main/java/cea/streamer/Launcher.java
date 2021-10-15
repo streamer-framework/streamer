@@ -24,25 +24,14 @@ import org.apache.kafka.streams.state.Stores;
 
 import com.google.common.io.Resources;
 
+import cea.util.GlobalUtils;
 import cea.util.Log;
 import cea.util.connectors.InfluxDBConnector;
 import cea.util.connectors.KibanaConnector;
 import cea.util.connectors.RedisConnector;
 
 /**
- * Demonstrates, using the high-level KStream DSL, how to implement the
- * WordCount program that computes a simple word occurrence histogram from an
- * input text.
- *
- * In this example, the input stream reads from a topic named
- * "streams-file-input", where the values of messages represent lines of text;
- * and the histogram output is written to topic "streams-wordcount-output" where
- * each record is an updated count of a single word.
- *
- * Before running this example you must create the source topic (e.g. via
- * bin/kafka-topics.sh --create ...) and write some data to it (e.g. via
- * bin-kafka-console-producer.sh). Otherwise you won't see any data arriving in
- * the output topic.
+ * STREAMER launcher
  */
 
 public class Launcher {
@@ -51,25 +40,26 @@ public class Launcher {
 	 * Launchs the streaming platform. It allows having separate processes, each of
 	 * them to read and process a different input channel
 	 * 
-	 * @param origins Folder where the properties are
+	 * @param ids Folder where the properties are
 	 * @throws IOException
 	 */
-	public void launch(String[] origins) throws IOException {
+	public void launch(String[] ids) throws IOException {
 
 		InfluxDBConnector.init();
 		// cleaning the database in InfluxDB
 		InfluxDBConnector.cleanDB();
 		Log.clearLogs();
-		RedisConnector.cleanKeys(origins);
+		RedisConnector.cleanKeys(ids);//does not clean the trained models
+		//RedisConnector.cleanModel("kdd-cup-99_23class");//just for KDD
 
-		if (origins.length == 0) {// default producer
-			origins = new String[1];
-			origins[0] = ".";// root properties
+		if (ids.length == 0) {// default producer
+			ids = new String[1];
+			ids[0] = ".";// root properties
 		}
 		Properties streamsConfiguration = new Properties();
 		String[] inputTopics = null;
 		String outputTopic = null;
-		try (InputStream props = Resources.getResource("setup/" + origins[0] + "/" + "streaming.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + ids[0] + "/streaming.props").openStream()) {
 			streamsConfiguration.load(props);
 		}
 		
@@ -83,7 +73,7 @@ public class Launcher {
 				}
 			}
 		} catch (Exception e) {
-			System.err.println("visualisation\" field in streaming.props must be \"true\" or \"false\".");
+			System.err.println("\"visualisation\" field in streaming.props must be \"true\" or \"false\".");
 		}
 
 		streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "PlatformTest");
@@ -108,31 +98,27 @@ public class Launcher {
 		StringSerializer stringSerializer = new StringSerializer();
 		StringDeserializer stringDeserializer = new StringDeserializer();
 
-		for (int i = 0; i < origins.length; i++) {
-			String origin;
-			if (origins[i].equals(".")) {
-				origin = "default";
+		for (int i = 0; i < ids.length; i++) {
+			String id;
+			if (ids[i].equals(".")) {
+				id = "default";
 			} else {
-				origin = origins[i];
+				id = ids[i];
 			}
-			try (InputStream props = Resources.getResource("setup/" + origins[i] + "/" + "streaming.props")
+			try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + ids[i] + "/" + "streaming.props")
 					.openStream()) {
 				streamsConfiguration.load(props);
-				inputTopics = (streamsConfiguration.getProperty("mainTopic").trim()).split(",");
-				outputTopic = streamsConfiguration.getProperty("outputTopic").trim();
+				inputTopics = (streamsConfiguration.getProperty("mainTopic").replace(" ","")).split(",");
+				outputTopic = streamsConfiguration.getProperty("outputTopic").replace(" ","");
 			}
 
-			// origin = "default";
-
-			storebuilder = Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore("Counts" + origin),
+			storebuilder = Stores.keyValueStoreBuilder(Stores.persistentKeyValueStore("Counts" + id),
 					new Serdes.StringSerde(), new Serdes.StringSerde()).withCachingDisabled();
 
-			// origin = "default";
-			builder.addSource("Source" + origin, stringDeserializer, stringDeserializer, inputTopics)
-					.addProcessor("Process" + origin, () -> new ProcessorReader(origin, "Counts" + origin),
-							"Source" + origin)
-					.addStateStore(storebuilder, "Process" + origin)
-					.addSink("sink" + origin, outputTopic, stringSerializer, stringSerializer, "Process" + origin);
+			builder.addSource("Source" + id, stringDeserializer, stringDeserializer, inputTopics)
+					.addProcessor("Process" + id, () -> new ProcessorReader(id, "Counts" + id),"Source" + id)
+					.addStateStore(storebuilder, "Process" + id)
+					.addSink("sink" + id, outputTopic, stringSerializer, stringSerializer, "Process" + id);
 
 			/*
 			 * storeSup = Stores.create("Counts"+origin) .withKeys(Serdes.String())
@@ -151,11 +137,10 @@ public class Launcher {
 
 			// If Kafka is running, then we cannot delete the file (other process is using it)
 			try (AdminClient client = KafkaAdminClient.create(streamsConfiguration)) {
-				ListTopicsResult topics = client.listTopics();
-				
+				ListTopicsResult topics = client.listTopics();				
 			} catch (Exception ex) {
 				// Kafka is not running, clean the files
-				cleanKafkaLogsForWindows(outputTopic, inputTopics, origins[0]);
+				cleanKafkaLogsForWindows(outputTopic, inputTopics, ids[0]);
 			}
 		} else {
 			streams.cleanUp();
@@ -184,7 +169,7 @@ public class Launcher {
 		 */
 	}
 	
-	private void cleanKafkaLogsForWindows(String outputTopic, String[] inputTopics, String origin) {
+	private void cleanKafkaLogsForWindows(String outputTopic, String[] inputTopics, String id) {
 		try {
 			// streams.cleanUp() on windows is not working, so I figured out a replacement
 			// for it.
@@ -198,7 +183,7 @@ public class Launcher {
 			for (String topic_input : inputTopics) {
 				kafka_logs_inputs.add(topic_input);
 			}
-			String kafka_logs_2 = "test-Counts" + origin + "-changelog";
+			String kafka_logs_2 = "test-Counts" + id + "-changelog";
 
 			File kafka_logs_folder = new File("C:\\tmp\\kafka-logs\\");
 			File[] files = kafka_logs_folder.listFiles(new FilenameFilter() {
@@ -217,7 +202,7 @@ public class Launcher {
 			}
 
 		} catch (Exception ex2) {
-			System.out.println("The log files of Kafka cannot be cleaned because Kafka is running!");
+			System.out.println("["+id+"] The log files of Kafka cannot be cleaned because Kafka is running!");
 			ex2.printStackTrace();
 		}
 	}

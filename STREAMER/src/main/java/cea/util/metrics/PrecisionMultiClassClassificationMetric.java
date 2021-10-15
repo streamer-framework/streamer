@@ -43,10 +43,8 @@ public class PrecisionMultiClassClassificationMetric extends MultiClassClassific
 		result = this.roundAvoid(total_precision, 3);
 		
 		ret.add(result);
-
-		System.out.println("Computing Precision Metric for " + id + "=" + result);
-		System.out.println("True Positive" + total_tp);
-		System.out.println("False Positive" + total_fp);
+		System.out.println("["+id+"] Precision metric True Positives " + total_tp);
+		System.out.println("["+id+"] Precision metric False Positives " + total_fp);
 		return ret;
 	}
 }

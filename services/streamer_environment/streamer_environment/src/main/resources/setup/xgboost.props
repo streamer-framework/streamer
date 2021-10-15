@@ -1,0 +1,11 @@
+#booster = gbtree 
+objective = multi:softmax
+#To specify if multi softmax
+num.class = 3
+
+##### Tuning parameters
+#recommended
+nround.tuning = true  
+colsub.sample.tuning = true
+maxdepth.minchild.tuning = true 
+gamma.tuning = true

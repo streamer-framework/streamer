@@ -31,8 +31,6 @@ public class PrecisionBinaryClassificationMetric extends BinaryClassificationMet
 		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
-				
-		System.out.println("Computing Precision Metric for " + id + "=" + result);
 		return ret;
 	}
 	

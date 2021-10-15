@@ -17,7 +17,9 @@ public class AccuracyBinaryClassificationMetric extends BinaryClassificationMetr
 	}
 	
 	/**
-	 * This method is for evaluating the Accuracy metric for the Binary Classification problems
+	 * It evaluates the Accuracy metric for the Binary Classification problems.
+	 * It computes the accuracy of the time records outputs regarding their target (expected output). 
+	 * It considers target/output with just one value.
 	 * 
 	 * @return Vector<Double> which contains the calculation of the Accuracy
 	 */
@@ -31,9 +33,6 @@ public class AccuracyBinaryClassificationMetric extends BinaryClassificationMetr
 		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
-				
-		System.out.println("Computing Accuracy Metric for " + id + "=" + result);
-		//System.out.println("TP="+ this.getTruePositive() + "; TN=" + this.getTrueNegative() + "; FP=" + this.getFalsePositive() + "; FN=" + this.getFalseNegative());
 		return ret;
 	}
 }

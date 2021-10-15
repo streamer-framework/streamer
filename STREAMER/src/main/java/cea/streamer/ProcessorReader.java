@@ -5,15 +5,16 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.Calendar;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.kafka.streams.KeyValue;
-import org.apache.kafka.streams.processor.AbstractProcessor;
-import org.apache.kafka.streams.processor.ProcessorContext;
 import org.apache.kafka.streams.processor.PunctuationType;
+import org.apache.kafka.streams.processor.api.Processor;
+import org.apache.kafka.streams.processor.api.ProcessorContext;
+import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
 
@@ -26,7 +27,6 @@ import cea.util.Log;
 import cea.util.connectors.ElasticSearchConnector;
 import cea.util.connectors.InfluxDBConnector;
 import cea.util.metrics.Metric;
-import cea.util.metrics.QuantileSummary;
 import cea.util.prepostprocessors.PrePostProcessor;
 
 /*
@@ -48,12 +48,12 @@ import cea.util.prepostprocessors.PrePostProcessor;
 /**
  * Class that implements the stream processor
  */
-public class ProcessorReader extends AbstractProcessor<String, String> {
+public class ProcessorReader implements Processor<String, String,String,String> {
 
 	/**
 	 * Context of the streaming process
 	 */
-	private ProcessorContext context;
+	private ProcessorContext<String,String> context;
 
 	/**
 	 * Map where records are stored once they are read from input topic
@@ -68,7 +68,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	/**
 	 * Timestamp that indicates the last time we read a topic
 	 */
-	private long previuosTimeStamp;
+	private long previousTimeStamp;
 
 	/**
 	 * The time we initialize the program
@@ -89,7 +89,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	/**
 	 * Timestamp of the previous training step (Last time we trained the model)
 	 */
-	private long previuosTrainingTime;
+	private long previousTrainingTime;
 
 	/**
 	 * Interval (in milliseconds) between 2 trainings of a model
@@ -101,16 +101,21 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	 * trained. Beyond that limit, the model is no longer trained
 	 */
 	private long trainingMaxData;
-
+	
+	/**
+	 *	Model's inference activation (default=true)
+	 */
+	private boolean onlineTrain = true;
+	
+	/**
+	 * Model is trained online (default=true)
+	 */
+	private boolean onlineInference = true;
+	
 	/**
 	 * Name of the class of the algorithm we use
 	 */
 	private String className;
-
-	/**
-	 * Quantile Summary
-	 */
-	private QuantileSummary mainQS = new QuantileSummary();
 
 	/**
 	 * Class with the preprocessor method for the incoming data. If null means that
@@ -155,34 +160,39 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 
 	public ProcessorReader(String origin, String kvstoreName/* , int counter */) {
 
-		System.err.println("ProcessorReader starts for " + origin);
+		System.err.println("["+origin+"] ProcessorReader starts ");
 
 		id = (origin/* + counter */);
-
 		if (origin.equals("default")) {
 			origin = ".";
 		}
 
 		if (Log.showDebug) {
-			System.out.println("constructor()");
+			System.out.println("["+id+"] constructor()");
 		}
 
 		this.kvstoreName = kvstoreName;
 
 		programInitTime = System.currentTimeMillis();
-		previuosTimeStamp = 0;
-		Class recC;
+		previousTimeStamp = 0;
+		Class<?> recC;
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/" + origin + "/" + "streaming.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/streaming.props").openStream()) {
 			properties.load(props);
 			readingTimeInterval = Integer.parseInt(properties.getProperty("readingTimeInterval"));
-			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").trim();
+			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").replace(" ","");
 			try {
 				if (properties.containsKey("visualization")) { 
 					visualization = Boolean.parseBoolean( properties.getProperty("visualization").toLowerCase());
 				}
+				if (properties.containsKey("online.train")) { 
+					onlineTrain = Boolean.parseBoolean( properties.getProperty("online.train").toLowerCase());
+				}
+				if (properties.containsKey("online.inference")) { 
+					onlineInference = Boolean.parseBoolean( properties.getProperty("online.inference").toLowerCase());
+				}
 			} catch (Exception e) {
-				System.err.println("visualisation\" field in streaming.props must be \"true\" or \"false\".");
+				System.err.println("["+id+"] visualisation\" field in streaming.props must be \"true\" or \"false\".");
 			}
 			try {
 				if (properties.containsKey("consumer.prepostprocessor")) {
@@ -192,21 +202,21 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 				}
 			} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
 					| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e3) {
-				System.err.println("The postprocessor class doen not exist");
+				System.err.println("["+id+"] The postprocessor class doen not exist");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 
-		try (InputStream props = Resources.getResource("setup/" + origin + "/" + "algs.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
 			properties.load(props);
-			className = (GlobalUtils.packageAlgs + ".") + properties.getProperty("algorithm").trim();
-			previuosTrainingTime = 0;
+			className = (GlobalUtils.packageAlgs + ".") + properties.getProperty("algorithm").replace(" ","");
+			previousTrainingTime = 0;
 			trainingInterval = Long.parseLong(properties.getProperty("training.interval"));
 			trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));
 
 			if (properties.containsKey("evaluation.metrics")) {
-				String[] aux = (properties.getProperty("evaluation.metrics").trim()).split(",");
+				String[] aux = (properties.getProperty("evaluation.metrics")).replace(" ","").split(",");
 				metrics = new Vector<Metric>();
 				for (String metricName : aux) {
 					try {
@@ -215,7 +225,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 					} catch (InstantiationException | IllegalArgumentException | InvocationTargetException
 							| SecurityException | IllegalAccessException | NoSuchMethodException
 							| ClassNotFoundException e3) {
-						System.err.println("The metric " + metricName + " class does not exist");
+						System.err.println("["+id+"] The metric " + metricName + " class does not exist");
 					}
 				}
 			}
@@ -229,7 +239,7 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	 * Method that initializes the processor context
 	 */
 	@Override
-	public void init(ProcessorContext context) {
+	public void init(ProcessorContext<String,String> context) {
 		// keep the processor context locally because we need it in punctuate()
 		// and commit()
 		this.context = context;
@@ -241,15 +251,15 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 		});
 
 		// retrieve the key-value store named "kvstoreName"
-		kvStore = (KeyValueStore) context.getStateStore(kvstoreName);
+		kvStore = (KeyValueStore<String,String>) context.getStateStore(kvstoreName);
 
 		if (Log.showDebug) {
-			System.out.println("init()");
+			System.out.println("["+id+"] init()");
 
-			KeyValueIterator iter = this.kvStore.all();
+			KeyValueIterator<String,String> iter = this.kvStore.all();
 			while (iter.hasNext()) {
-				KeyValue entry = (KeyValue) iter.next();
-				System.err.println("intial record " + entry.key + ", " + entry.value.toString());
+				KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
+				System.err.println("["+id+"] intial record " + entry.key + ", " + entry.value.toString());
 			}
 			iter.close();
 		}
@@ -259,27 +269,28 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	 * Method that is called on each of the received record.
 	 */
 	@Override
-	public void process(String dummy, String line) {
-		if (previuosTimeStamp == 0) {
-			KeyValueIterator iter2 = this.kvStore.all();
+	public void process(Record<String, String> record) {
+	
+		if (previousTimeStamp == 0) {
+			KeyValueIterator<String,String> iter2 = this.kvStore.all();
 			while (iter2.hasNext()) {
-				KeyValue entry = (KeyValue) iter2.next();
+				KeyValue<String,String> entry = (KeyValue<String,String>) iter2.next();
 				kvStore.delete((String) entry.key);
 				if (Log.showDebug) {
-					System.err.println("deleting record " + entry.key + ", " + entry.value.toString());
+					System.err.println("["+id+"] deleting record " + entry.key + ", " + entry.value.toString());
 				}
 			}
 		}
 		countReceivedRecords++;
-		kvStore.put(dummy + "_" + countReceivedRecords, line);
+		kvStore.put(record.key() + "_" + countReceivedRecords, record.value());
 
 		if (Log.showDebug) {
-			System.out.println("process()");
+			System.out.println("["+id+"] process()");
 
-			KeyValueIterator iter = this.kvStore.all();
+			KeyValueIterator<String,String> iter = this.kvStore.all();
 			while (iter.hasNext()) {
-				KeyValue entry = (KeyValue) iter.next();
-				System.out.println("processing item: " + entry.key + ", " + entry.value.toString());
+				KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
+				System.out.println("["+id+"] processing item: " + entry.key + ", " + entry.value.toString());
 			}
 			iter.close();
 		}
@@ -295,14 +306,14 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	public void punctuate(long timestamp) {
 
 		Calendar cal = Calendar.getInstance();
-		cal.setTimeInMillis(previuosTimeStamp);
+		cal.setTimeInMillis(previousTimeStamp);
 		cal.add(Calendar.MILLISECOND, readingTimeInterval);
 
 		long currentTime = System.currentTimeMillis();
 
 		if (Log.showDebug) {
-			System.out.println("punctuate()");
-			System.out.println("" + "TimeStamp:\t\t" + timestamp + "\nProgram init time:\t" + programInitTime
+			System.out.println("["+id+"] punctuate()");
+			System.out.println("["+id+"] TimeStamp:\t\t" + timestamp + "\nProgram init time:\t" + programInitTime
 					+ "\nPrevious time+interval:\t" + cal.getTimeInMillis() + "\nCurrent time:\t\t"
 					+ System.currentTimeMillis());
 		}
@@ -311,22 +322,22 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 
 			operateData(currentTime);// work with the data
 
-			KeyValueIterator iter = this.kvStore.all();
+			KeyValueIterator<String,String> iter = this.kvStore.all();
 			if (Log.showDebug) {
 				iter = this.kvStore.all();
-				System.out.println("punctuating... items left:");
+				System.out.println("["+id+"] punctuating... items left:");
 				while (iter.hasNext()) {
-					KeyValue entry = (KeyValue) iter.next();
-					System.out.println("punctuate after sending: " + entry.key + ", " + entry.value.toString());
+					KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
+					System.out.println("["+id+"] punctuate after sending: " + entry.key + ", " + entry.value.toString());
 				}
 				iter.close();
 			}
 
-			previuosTimeStamp = currentTime;
+			previousTimeStamp = currentTime;
 
 		} else {
 			if (Log.showDebug) {
-				System.out.println("waiting");
+				System.out.println("["+id+"] waiting");
 			}
 		}
 
@@ -340,13 +351,13 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	@Override
 	public void close() {
 		if (Log.showDebug) {
-			System.out.println("closing... items left:");
-			KeyValueIterator iter = this.kvStore.all();
+			System.out.println("["+id+"] closing... items left:");
+			KeyValueIterator<String,String> iter = this.kvStore.all();
 			while (iter.hasNext()) {
-				KeyValue entry = (KeyValue) iter.next();
+				KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
 				kvStore.delete((String) entry.key);
 				if (Log.showDebug) {
-					System.out.println("** " + entry.key + ", " + entry.value.toString());
+					System.out.println("["+id+"] " + entry.key + ", " + entry.value.toString());
 				}
 			}
 		}
@@ -359,41 +370,38 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 	 */
 	private void operateData(long currentTime) {
 
-		TimeRecord record = null;// structure to process data in the platform
 		Vector<TimeRecord> records = new Vector<TimeRecord>();
 
 		if (Log.showDebug) {
-			System.out.println("**** kvSotre in punctuate(operateData()) **");
+			System.out.println("["+id+"] **** kvSotre in punctuate(operateData()) **");
 			int cont = 0;
-			KeyValueIterator iter2 = this.kvStore.all();
+			KeyValueIterator<String,String> iter2 = this.kvStore.all();
 			while (iter2.hasNext()) {
 				cont++;
-				KeyValue e = (KeyValue) iter2.next();
-				System.out.println("Key: " + e.key + " - Value: " + e.value.toString());
+				KeyValue<String,String> e = (KeyValue<String,String>) iter2.next();
+				System.out.println("["+id+"] Key: " + e.key + " - Value: " + e.value.toString());
 			}
-			System.out.println("**** " + cont);
+			System.out.println("["+id+"] **** " + cont);
 		}
 
 		/* Instead, for the moment, we just send it to an output topic */
-		KeyValueIterator iter = this.kvStore.all();
+		KeyValueIterator<String,String> iter = this.kvStore.all();
 
 		while (iter.hasNext()) {
-			KeyValue entry = (KeyValue) iter.next();
-
-			// context.forward(entry.key, entry.value.toString());// sends the raw record to
-			// the out topic
+			KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
+			//context.forward(new Record<String, String>(entry.key, entry.value,-1));// sends the raw record to the output topic
 
 			try {
-				Class recC = Class.forName(problemType + "Record");
+				Class<?> recC = Class.forName(problemType + "Record");
 				TimeRecord recObj = (TimeRecord) recC.getDeclaredConstructor().newInstance();
-				recObj.fill(entry.value.toString());
+				recObj.fill(entry.key.toString(),entry.value.toString());
 
 				records.add(recObj);
 
 				this.kvStore.delete((String) entry.key);
 			} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
 					| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e) {
-				System.err.println("The type of time record specified does not exist. Platform is being interrupted");
+				System.err.println("["+id+"] The type of time record specified does not exist. STTREAMER is being interrupted");
 				e.printStackTrace();
 			}
 		}
@@ -401,18 +409,28 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 		this.kvStore.flush();
 		iter.close();
 
-		// Call the preprocess if there is any
+		System.out.println("["+id+"] "+records.size()+" records retreived from topic(s)");
+
+		
+		/************** PRE PROCESSING ***********************/
 		if (prePostProcessor != null) {
-			records = prePostProcessor.preprocess(records, id);
+			if(!records.isEmpty()) {
+				records = prePostProcessor.preprocess(records, id);
+			}else {
+				System.err.println("["+id+"] Pre-processing not performed, records set is empty");
+			}
 		}
-
-		for (TimeRecord t : records) {
-			context.forward(t.getSource() + t.getTimeStamp(), t.fullRecordToString());// sends the record to the out
-																						// topic
+		
+		if(!records.isEmpty()) {		
+			for (TimeRecord t : records) {
+				context.forward(new Record<String, String>(t.getSource() + t.getTimeStamp(), t.fullRecordToString(),t.getTimeStampMillis()));// sends the preprocessed record to the output topic
+			}
+			
+			/* The new received data is also stored in influxDB */		
+			InfluxDBConnector.store(records, id);
+		}else {
+			System.err.println("["+id+"] Records set is empty, nothing pushed to output topic");
 		}
-
-		/* The new received data is also stored in influxDB */
-		InfluxDBConnector.store(records);// store in DB
 
 		/* Compute Quantile */
 		// mainQS.merge(QuantileSummary.dataToQS(records));
@@ -421,65 +439,85 @@ public class ProcessorReader extends AbstractProcessor<String, String> {
 		/* Here is where the Algorithm Module will be called to process the data */
 		try {
 
-			Class algC = Class.forName(className);
+			Class<?> algC = Class.forName(className);
 			MLalgorithms alg = (MLalgorithms) algC.getDeclaredConstructor().newInstance();
 
 			/************** TRAINING ***********************/
-			if ((trainingInterval >= 0) && ((currentTime - previuosTrainingTime) >= trainingInterval) && !records.isEmpty()) {// shall we run
-																										// the training
-				String captName = records.get(0).getName();
-				Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(captName.toLowerCase(), trainingMaxData,
-						alg.updateModel);
+			if ((onlineTrain) && (trainingInterval >= 0) && ((currentTime - previousTrainingTime) >= trainingInterval)) {// shall we run
+				Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(id, trainingMaxData,alg.isUpdateModel());
 				if (recordsDB.size() <= trainingMaxData) {
-
-					System.out.println("Training the algorithm " + algC);
-
-					/* Create a thread that executes the training algorithm */
-					Thread trainingThread = new Thread() {
-						public void run() {
-							Log.displayLogTrain
-									.info("\n"+id+": ####### New Model (trained from InfluxDB): #######\n ");
-							alg.learn(recordsDB, id);
-						}
-					};
-					trainingThread.start();
+					if(!recordsDB.isEmpty()){ 
+						System.out.println("["+id+"] Training: algorithm " + algC);
+	
+						/* Create a thread that executes the training algorithm */
+						Thread trainingThread = new Thread() {
+							public void run() {
+								Log.displayLogTrain
+										.info("\n ####### ["+id+"] New Model (trained from InfluxDB): #######\n ");
+								alg.learn(recordsDB, id);
+							}
+						};
+						trainingThread.start();
+					}else {
+						System.err.println("["+id+"] Training not performed, records set is empty");
+					}						
+				}else {
+					System.err.println("["+id+"] Training not performed, records training set ("+recordsDB.size()+") is greater than the maximum size defined ("+trainingMaxData+")");
 				}
 
-				previuosTrainingTime = currentTime;
+				previousTrainingTime = currentTime;
 
 			}
 
-			/************** TEST ***********************/
-			System.out.println("Run the model from " + algC);
-			alg.run(records, id);
+			/************** INFERENCE ***********************/
+			if(onlineInference) {
+				if(!records.isEmpty()){ 
+					System.out.println("["+id+"] Inference: model from " + algC);
+					alg.run(records, id);
+				}else {
+					System.err.println("["+id+"] Inference not performed, records set is empty");
+				}
+			}
 
 		} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
 				| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e) {
-			System.err.println("The type of algorithm specified does not exist. Platform is being interrupted");
+			System.err.println("["+id+"] The type of algorithm specified does not exist. Platform is being interrupted");
 			e.printStackTrace();
 		}
 		
-		// Call the metrics if there is any
-		Map<Metric, Vector<Double>> metricsEvaluation = new HashMap<Metric, Vector<Double>>();
-		if (metrics != null) {
-			for (Metric metric : metrics) {
-				Vector<Double> values = metric.evaluate(records, id);
-				metricsEvaluation.put(metric, values);
-				String metricLog = (id+": "+metric.getName()+" =");
-				for(double d:values) {
-					metricLog+=(" "+d);
-				}				
-				Log.metricsLog.info(metricLog);
+
+		/************** POST PROCESSING ***********************/
+		if (prePostProcessor != null) {
+			if(!records.isEmpty()){ 
+				records = prePostProcessor.postprocess(records, id);
+			}else {
+				System.err.println("["+id+"] Post-processing not performed, records set is empty");
 			}
 		}
-		//TODO: store in files
+		
+		/********************* METRICS ***********************/
+		Map<Metric, Vector<Double>> metricsEvaluation = new LinkedHashMap<Metric, Vector<Double>>();
+		if(!records.isEmpty()){ 
+			if (metrics != null) {
+				for (Metric metric : metrics) {
+					Vector<Double> values = metric.evaluate(records, id);
+					metricsEvaluation.put(metric, values);
+					StringBuilder metricLog = new StringBuilder("["+id+"] "+metric.getName()+" =");
+					for(double d:values) {
+						metricLog.append(" "+d);
+					}				
+					Log.metricsLog.info(metricLog.toString());
+					System.out.println(metricLog.toString());
+				}
+			}
+		}else {
+			System.err.println("["+id+"] Metrics not computed, records set is empty");
+		}
+
+		/************** VISUALIZATION ***********************/
 		if (!metricsEvaluation.isEmpty() && visualization) {
 			ElasticSearchConnector.init();
 			ElasticSearchConnector.ingestMetricValues(metricsEvaluation, id);
-		}
-		// Call the postprocess if there is any
-		if (prePostProcessor != null) {
-			records = prePostProcessor.postprocess(records, id);
 		}
 
 	}

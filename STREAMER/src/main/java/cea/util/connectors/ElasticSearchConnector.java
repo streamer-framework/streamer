@@ -25,6 +25,7 @@ import org.json.simple.JSONObject;
 import com.google.common.io.Resources;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 import cea.util.metrics.Metric;
 
 public class ElasticSearchConnector {
@@ -51,13 +52,13 @@ public class ElasticSearchConnector {
 	 */
 	public static void init() {
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/elasticsearch.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"elasticsearch.props").openStream()) {
 			properties.load(props);
-			host = properties.getProperty("host").trim();
+			host = properties.getProperty("host").replace(" ","");
 			if (host.equals("localhost"))
 				host = host + ":9200";
-			evaluationindex = properties.getProperty("index.evaluation").trim();
-			rawdataindex = properties.getProperty("index.rawdata").trim();
+			evaluationindex = properties.getProperty("index.evaluation").replace(" ","");
+			rawdataindex = properties.getProperty("index.rawdata").replace(" ","");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -90,13 +91,11 @@ public class ElasticSearchConnector {
 			// Check if the index already exists in ES
 			boolean exists = client.indices().exists(new GetIndexRequest(index_name), RequestOptions.DEFAULT);
 			if (!exists) {
-				System.out.println("Creating the index: " + index_name);
+				System.out.println("ES Creating the index: " + index_name);
 				// Don't exist, so we have to create a new one
 				client.indices().create(new CreateIndexRequest(index_name), RequestOptions.DEFAULT);
-
-				// System.out.println("Index " + index_name + " is created!");
 			} else {
-				// System.out.println("Index " + index_name + " exists!");
+				// System.out.println("Index " + index_name + " already exists!");
 			}
 
 		} catch (Exception ex) {
@@ -119,16 +118,15 @@ public class ElasticSearchConnector {
 			// Check if the index already exists in ES
 			boolean exists = client.indices().exists(new GetIndexRequest(index_name), RequestOptions.DEFAULT);
 			if (!exists) {
-				System.out.println("Creating the index: " + index_name);
+				System.out.println("ES Creating the index: " + index_name);
 				// Don't exist, so we have to create a new one with mapping
 				client.indices().create(new CreateIndexRequest(index_name), RequestOptions.DEFAULT);
 
 				PutMappingRequest request = new PutMappingRequest(index_name).source(index_mapping, XContentType.JSON);
 
 				client.indices().putMapping(request, RequestOptions.DEFAULT);
-				//System.out.println("Index " + index_name + " was created successfully!");
 			} else {
-				//System.out.println("Index " + index_name + " already exists.");
+				//System.out.println("Index " + index_name + " already already exists.");
 			}
 
 		} catch (Exception ex) {
@@ -144,20 +142,20 @@ public class ElasticSearchConnector {
 	 * @param id:         the project name or the hostname depending on the project
 	 *                    requirements
 	 */
-	@SuppressWarnings("unchecked")
+
 	public static void ingestRawData(Vector<TimeRecord> records, String id) {
 
 		try (RestHighLevelClient client = getElasticSearchClient()) {
 			for (TimeRecord tr : records) {
 				JSONObject obj = new JSONObject();
-				obj.put("timestamp", formatTimeES(tr.getTimestamp()));
+				obj.put("timestamp", formatTimeES(tr.getTimeStamp()));
 				obj.put("app", id);
 				for (String k : tr.getValues().keySet()) {
 					obj.put(k, tr.getValues().get(k));
 				}
 				// obj.put("measure", tr.getValues().get("meassure"));
-				obj.put(tr.getExpectedOutputLabel(), tr.getTarget());
-				obj.put(tr.getOutputLabel(), tr.getOutput());
+				obj.put(tr.getTargetLabel(), tr.getTarget().get(0)); //TODO: see hot to adapt it to multivariate
+				obj.put(tr.getOutputLabel(), tr.getOutput().get(0));//TODO: see hot to adapt it to multivariate
 				IndexRequest insertRequest = new IndexRequest(rawdataindex);
 				insertRequest.source(obj.toJSONString(), XContentType.JSON);
 				client.index(insertRequest, RequestOptions.DEFAULT);
@@ -171,10 +169,10 @@ public class ElasticSearchConnector {
 
 	/**
 	 * ingestMetricValues is a method for inserting the metrics values
-	 * to ES. It inserts all the evaluation mertrics' values to monitor the
+	 * to ES. It inserts all the evaluation metrics' values to monitor the
 	 * performance of the model
 	 * 
-	 * @param records:    the records that need to be processed
+	 * @param metricsEvaluation:    the metrics records evaluation
 	 * @param id:         the project name or the hostname depending on the project
 	 *                    requirements
 	 */
@@ -215,7 +213,7 @@ public class ElasticSearchConnector {
 	 * @return String: formatted date as String
 	 */
 	private static String formatTimeES(String d) {
-		SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yy HH:mm:ss.SSS", Locale.ENGLISH);
+		SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyHH:mm:ss.SSS", Locale.ENGLISH);
 		Date dateTime = null;
 		try {
 			dateTime = format.parse(d);

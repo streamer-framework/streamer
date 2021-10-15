@@ -13,25 +13,25 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 import com.google.common.io.Resources;
 
-import cea.util.prepostprocessors.ProcessRawLines;
+import cea.util.GlobalUtils;
 
 /**
  * This producer writes in a topic each line (form : "timestamp;value") of a datafile continuously and periodically.
  * The parameters can be changed in the streaming.props
  */
-public class BlocksProducer implements IProducer{
+public class BlocksProducer extends Producer{
 
 	/**
 	 * Runs a producer in a separate Thread. Its properties are read within from origin folder
-	 * @param origin folder where properties files are
+	 * @param id folder where properties files are
 	 */
 	@Override
-	public void runProducerInNewThread(String origin) {	
+	public void runProducerInNewThread(String id) {	
 		Thread producerThread = new Thread() {
 		public void run() {						
 				try {
 					BlocksProducer p = new BlocksProducer();
-					p.produce(origin);
+					p.produce(id);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -46,7 +46,7 @@ public class BlocksProducer implements IProducer{
 	 * @throws IOException
 	 */
 	@Override
-	public void produce(String origin) throws IOException{		
+	public void produce(String id) throws IOException{		
 
 		KafkaProducer<String, String> producer;
 		Path path = null;
@@ -55,40 +55,38 @@ public class BlocksProducer implements IProducer{
 		long recordsPerBlock;
 		long producerTimeInterval;	//in milliseconds
 		boolean containHeaders = false;
-	    try (InputStream props = Resources.getResource("setup/"+origin+"streaming.props").openStream()) {
+	    try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+id+"/streaming.props").openStream()) {
 		    Properties properties = new Properties();
 		    properties.load(props);            
 		    producer = new KafkaProducer<String, String>(properties);            
 		    path = Paths.get( properties.getProperty("datafile") );
-		    topics= (properties.getProperty("mainTopic").trim()).split(",");
+		    topics= (properties.getProperty("mainTopic").replace(" ","")).split(",");
 		    maxBlocks = Long.parseLong( properties.getProperty("maxBlocks") );
 		    recordsPerBlock = Long.parseLong( properties.getProperty("recordsPerBlock") );
 		    producerTimeInterval = Long.parseLong( properties.getProperty("producerTimeInterval") );
 		    if (properties.containsKey("containsHeader")) { 
-		    	containHeaders = Boolean.parseBoolean(properties.getProperty("containsHeader").trim().toLowerCase());
+		    	containHeaders = Boolean.parseBoolean(properties.getProperty("containsHeader").replace(" ","").toLowerCase());
 		    }
 	    }
-	    
-		ProcessRawLines reader = new ProcessRawLines();
-	   
+	   	   
         String line=null;
 		BufferedReader br=Files.newBufferedReader(path);		
 		int countBlocks = 0;
-		String[] key_value=null;
+		String key;
 		try{
 			if(containHeaders)
 				br.readLine();
 			do{	
 				for(int i =0; i< recordsPerBlock; i++){//send from 5 to 5 every 10 seconds
-					line = br.readLine();
-					key_value = reader.processRecords(path.toString(),line);
-					for(int t=0; t<topics.length; t++) {
-						producer.send( new ProducerRecord<String, String>(topics[t], key_value[0]+"_"+topics[t], key_value[1]) );
-						System.out.println("Writing in topic ("+topics[t]+"): "+key_value[1] +" --> key: "+key_value[0]+"_"+topics[t]);
-						System.out.println(topics[t] +""+ key_value[0]+"_"+topics[t]+""+ key_value[1]);
-
-					} 
-	                
+					line = br.readLine();	
+					//line = line.replaceAll("\"", "").replaceAll("\t", "");//we remove the spaces
+					if(line.replaceAll("\"", "").replaceAll("\t", "") != "") {//record is not empty
+						for(int t=0; t<topics.length; t++) {
+							key = getKey(path.toString(),topics[t]);
+							producer.send( new ProducerRecord<String, String>(topics[t], key, line));
+							System.out.println("["+id+"] Writing in topic ("+topics[t]+") Key: ["+key+"] Content: "+line);							
+						}
+					}
 				}
 				System.out.println();
 				producer.flush();
@@ -98,11 +96,11 @@ public class BlocksProducer implements IProducer{
 			} while(line!=null && countBlocks < maxBlocks);
         
         } catch (NullPointerException npe) {
-			System.out.println("The end of the data source has been reached. There is no more data to send");        	
+			System.out.println("["+id+"] The end of the data source has been reached. There is no more data to send");        	
         } catch (Exception e) {
 			e.printStackTrace();        	
 		} finally {
-			System.out.println("Closing the producer");
+			System.out.println("["+id+"] Closing the producer");
 			producer.close();
 			br.close();
 		}

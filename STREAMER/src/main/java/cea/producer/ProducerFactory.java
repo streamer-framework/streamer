@@ -12,9 +12,9 @@ public class ProducerFactory{
 	 * @param producerType
 	 * @return appropriated object according to specified Producer type
 	 */
-	public  IProducer getProducer(String producerType) {
+	public  Producer getProducer(String producerType) {
 		
-		return (producerType.equals("ONLINE"))?new OnlineProducer():new BlocksProducer();
+		return (producerType.equals("TIMESTAMP"))?new TimeStampProducer():new BlocksProducer();
 	}
 
 }

@@ -2,8 +2,17 @@ package cea.util.connectors;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
+
+import com.google.common.io.Resources;
+
+import cea.util.GlobalUtils;
 import cea.util.Log;
 
 
@@ -20,39 +29,23 @@ public class CodeConnectors {
 	public static void execRFile(String scriptFileName, String id) {
 		String redisIP =  RedisConnector.getRedisIP();
 		String redisPort = RedisConnector.getRedisPort();
+		String lastLine = null;
 		try {
-			System.out.println(id+": Starts execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
-			Process p = Runtime.getRuntime().exec("Rscript " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
-			p.waitFor();
+			System.out.println("["+id+"] Started execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
+			//Process p = Runtime.getRuntime().exec("Rscript " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
+			//p.waitFor();
+			
+			String r_exec_command = "Rscript";
+			Properties properties = new Properties();
+			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
+			properties.load(props);
+			r_exec_command = properties.getProperty("r_exec_path").trim();
+			props.close();
+			
+			Process p = Runtime.getRuntime().exec(r_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
+			lastLine = launchScript(p, id, scriptFileName);
 
-			//Separating logs between two executions
-			Log.separate(Log.infoLog, id+": "+scriptFileName);
-			Log.separate(Log.errorLog, id+": "+scriptFileName);
-
-			//Read Outputs
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(p.getInputStream())
-			);
-			String line;
-			String lastLine = "";
-			while ((line = reader.readLine()) != null) {
-				if (scriptFileName.contains("Train")) {
-					Log.displayLogTrain.info(line);
-				}
-				Log.infoLog.info(line);
-				lastLine = line;
-			}
-
-			//Read Errors
-			BufferedReader readerErr = new BufferedReader(
-					new InputStreamReader(p.getErrorStream())
-			);
-			String lineErr;
-			while ((lineErr = readerErr.readLine()) != null) {
-				Log.errorLog.info(lineErr);
-			}
-
-			System.out.println(id+": Finishes execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
+			System.out.println("["+id+"] Finished execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
 
 			//Send data to JSON
 			if (scriptFileName.contains("Test")) {
@@ -60,7 +53,7 @@ public class CodeConnectors {
 				GUIConnector.resultToJSON(lastLine, jsonFileName);
 			}
 
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException/* | InterruptedException */e) {
 			e.printStackTrace();
 		}		
 	}
@@ -74,75 +67,106 @@ public class CodeConnectors {
 	public static String execPyFile(String scriptFileName, String id) {
 		String redisIP =  RedisConnector.getRedisIP();
 		String redisPort =  RedisConnector.getRedisPort();
-		System.out.println(id+": Starts execution " + scriptFileName + " with args " + id+ " " + redisIP + " " + redisPort);
-		String lastLine = "";
+		System.out.println("["+id+"] Started execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
 
-		try {
-			
+		String lastLine="";
+		try {			
 			Process p = null;
+			String py_exec_command = "python";
+			Properties properties = new Properties();
+			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
+			properties.load(props);
+			py_exec_command = properties.getProperty("py_exec_path").trim();
+			props.close();
 			
-			String OS = System.getProperty("os.name").toLowerCase();
-			
-			if (OS.startsWith("windows")) {
+			if (py_exec_command.contains("conda")) {
 				ProcessBuilder pb = new ProcessBuilder();
-				pb.command("cmd", "/c", "conda activate ts_env && python " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
+				pb.command("cmd", "/c",py_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
 				p = pb.start();
-			} else if (OS.equals("linux")) {//MAC
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
-				p.waitFor();			
-			} else if (OS.equals("mac")) {//MAC
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
-				p.waitFor();
-			} else if (OS.equals("nix") || OS.equals("nux") || OS.equals("aix") ) {//UNIX
-				p = Runtime.getRuntime().exec("python3 " + scriptFileName + " " +id+ " " + redisIP + " " + redisPort);
-				p.waitFor();
-			} 
-			
-			// Separating logs between two executions
-			Log.separate(Log.infoLog, id+": "+scriptFileName);
-			Log.separate(Log.errorLog, id+": "+scriptFileName);
-
-			// Read Outputs
-			BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line;
-
-			while ((line = reader.readLine()) != null) {
-				if (scriptFileName.toLowerCase().contains("train")) {
-					Log.displayLogTrain.info(line);
-				}
-				Log.infoLog.info(line);
-				lastLine = line;
-
-			}
-			// Read Errors
-			BufferedReader readerErr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-			String lineErr;
-			while ((lineErr = readerErr.readLine()) != null) {
-				Log.errorLog.info(lineErr);
+				lastLine = launchScript(p, id, scriptFileName);
+			} else {
+				p = Runtime.getRuntime().exec(py_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
+				//p.waitFor();
+				lastLine = launchScript(p, id, scriptFileName);
 			}
 			
-			p.waitFor();
-			System.out.println(id+": Finishes execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
+			System.out.println("["+id+"] Finished execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
 			
 			//Send data to JSON
 			/*if (scriptFileName.toLowerCase().contains("test")) {
 				String jsonFileName = "./json/result" + args + ".json";
 				GUIConnector.resultToJSON(lastLine, jsonFileName);
 			}*/
-		} catch (IOException | InterruptedException e) {
+			
+		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println("entered2?");
 		}
 		return lastLine;
 	}
 	
+	/**
+	 * Shows in "scipt.out" live messages from the script which is running
+	 * @param p process
+	 * @param id id of the process
+	 * @param scriptFileName which is being executed by p
+	 * @return last line of the info message
+	 */
+	private static String launchScript(Process p, String id, String scriptFileName) {
+		StringBuffer errorMessages = new StringBuffer();
+		StringBuffer infoMessages = new StringBuffer();
 
-	public static void main(String[] args) {
-		String redisIP =  RedisConnector.getRedisIP();
-		String redisPort =  RedisConnector.getRedisPort();
-		String filepath = "C:\\Users\\ma261439\\git\\dsplatform\\data\\streamops_data\\testing-jython\\test.py"+ " " + redisIP + " " + redisPort;
-		execPyFile(filepath, "");
-	}	
+		// Temp log
+		String tempLogName="temp_"+id;
+		Logger tempLog = Log.createTempLog(tempLogName);
+		Log.separate(tempLog, "["+id+"] "+scriptFileName);		
+		
+		Timer infoTimer = new Timer();
+		Timer errorTimer = new Timer();
+		Process finalP = p;
+		infoTimer.scheduleAtFixedRate(new TimerTask() {//info messages
+			@Override
+			public void run() {
+				try(BufferedReader reader = new BufferedReader(new InputStreamReader(finalP.getInputStream()))) {
+					String c;	
+					while((c = reader.readLine()) != null) {
+						tempLog.info("["+id+"] (info) "+c);
+						infoMessages.append(c+"\n");					
+					}
+				} catch (IOException ignored) {}
+			}
+		}, 0, 250);
+		errorTimer.scheduleAtFixedRate(new TimerTask() {//error messages
+			@Override
+			public void run() {
+				try(BufferedReader errorReader = new BufferedReader(new InputStreamReader(finalP.getErrorStream())))
+				{
+						String c;
+						while((c = errorReader.readLine()) != null) {
+							tempLog.info("["+id+"] (err) "+c);
+							errorMessages.append(c+"\n");
+						}
+				}
+				catch (IOException ignored) {}
+			}
+		}, 0, 250);
+		
+		try {
+			p.waitFor();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}		
+		
+		infoTimer.cancel();
+		errorTimer.cancel();
+		Log.deleteLog(tempLogName);		
+				
+		Log.separate(Log.infoLog, "["+id+"] "+scriptFileName);
+		Log.infoLog.info(infoMessages.toString());
+		Log.separate(Log.errorLog, "["+id+"] "+scriptFileName);
+		Log.errorLog.info(errorMessages.toString());
+		
+		String[] aux = infoMessages.toString().split("\n");		
+		return aux[aux.length-1];
+	}
 	
 }
-

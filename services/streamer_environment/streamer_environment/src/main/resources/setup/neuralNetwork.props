@@ -1,0 +1,13 @@
+regression.problem = TRUE
+
+hidden.layers = 4,17
+
+seed = 123
+
+###### Regression parameters if needed ###########
+dependant.variable = used_jauge
+predicator.variables = duration;driverprofile
+
+
+#minmax.varialbles.order = distance;duration;power;speed;used_jauge;driverprofile
+#minmax.variables.values = 0.0:100.0;0:50400000.0;-2000.0:7500.0;0.0:120.0;0.0:100.0;1.0:5.0

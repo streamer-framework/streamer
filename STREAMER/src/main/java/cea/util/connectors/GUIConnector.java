@@ -3,15 +3,10 @@ package cea.util.connectors;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.Properties;
 import java.util.Vector;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
-import com.google.common.io.Resources;
 
 import cea.streamer.core.TimeRecord;
 import cea.util.Log;
@@ -33,7 +28,7 @@ public class GUIConnector {
 	protected static void resultToJSON(String line, String jsonFileName) {
 		if (!line.equals("[1] \"OK\"")) {
     		JSONObject obj = new JSONObject();
-    		JSONArray classifResult = new JSONArray();
+    		JSONArray outputs = new JSONArray();
     		String cleanLine = line;
     		if (line.contains("[1] ")) {
     			cleanLine = line.substring(4); // remove the "[1] "
@@ -41,9 +36,9 @@ public class GUIConnector {
     		String[] split = cleanLine.split(" ");
     		if (split.length>1) {
 	    		for (int i = 0;i <split.length;i++) {
-	    			classifResult.add(split[i]);
+	    			outputs.add(split[i]);
 	    		}
-	    		obj.put("result", classifResult);
+	    		obj.put("result", outputs);
     		} else {
 	    		obj.put("result", split[0]);
     		}
@@ -75,10 +70,8 @@ public class GUIConnector {
 		JSONObject obj = new JSONObject();
 		JSONArray timestampJSON = new JSONArray();
 		JSONArray valueJSON = new JSONArray();
-		String fieldInflux = records.get(0).getName();
-		Iterator<TimeRecord> it = records.iterator();
-		while(it.hasNext()) {
-			TimeRecord record = it.next();
+		String fieldInflux = records.get(0).getSource();		
+		for(TimeRecord record: records) {			
 			timestampJSON.add(record.getTimeStamp());
 			for (String keyValue : record.getValues().keySet()) {
 				valueJSON.add(record.getValues().get(keyValue)); //to change if multiples features
@@ -98,17 +91,8 @@ public class GUIConnector {
 
 
 	public static void updateConfusionMatrix(Vector<TimeRecord> data, String id, int windowLength) {
+		Jedis jedis = RedisConnector.getJedis();
 
-		String host="localhost";
-		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/redis.props").openStream()) {
-			properties.load(props);
-			host = properties.getProperty("host").trim();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-
-		Jedis jedis = new Jedis(host);
 		int[] confMat = new int[4];
 		String confMatStr = jedis.get("confMat"+id);
 
@@ -119,14 +103,14 @@ public class GUIConnector {
 			}
 		}
 
-		String predicted = jedis.get("classifResults"+id);
+		String predicted = jedis.get("outputs"+id);
 		if(predicted != null && !predicted.replaceAll("[^0-9]", "").equals("")) {
 			predicted = predicted.replaceAll("[^0-9]", "");
 			String actual = "";
 			for (int i = 0; i < data.size(); i += windowLength) {
 				boolean anomaly = false;
 				for (int j = i; j < (i + windowLength); j++) {
-					if (j < data.size() && Double.parseDouble(data.get(j).getTarget()) != 0) {
+					if (j < data.size() && Double.parseDouble(data.get(j).getTarget().get(0)) != 0) {
 						anomaly = true;
 						break;
 					}

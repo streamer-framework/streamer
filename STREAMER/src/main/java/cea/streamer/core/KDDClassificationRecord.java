@@ -1,12 +1,8 @@
 package cea.streamer.core;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class KDDClassificationRecord extends TimeRecord {
@@ -14,6 +10,7 @@ public class KDDClassificationRecord extends TimeRecord {
 	
 	public KDDClassificationRecord() {
 		super();
+		setSeparatorFieldsRawData(",");
 		List<String> headers_list = Arrays.asList( "duration",
                 "src_bytes",
                 "dst_bytes",
@@ -141,54 +138,35 @@ public class KDDClassificationRecord extends TimeRecord {
 	}
 	
 	@Override
-	public void fill(String data) {
-		if(data.trim() != "") {
-			String[] fields = data.trim().toLowerCase().split(";");
-			if(fields.length > 1) {
-				try {
-					//This sleep is added for the reason that I am assigning the timestamps to the used dataset and thus we should have a little gap in time to obtain different microseconds
-					TimeUnit.MICROSECONDS.sleep(10);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				// skip if this record contains the header of the csv file.
-				if(fields[1].contains("duration")) {
-					System.out.println(fields[1]);
-					return;
-				}
-				source = fields[0];
-				timestamp = new SimpleDateFormat("dd-MMM-yy HH:mm:ss.SSS", Locale.ENGLISH).format(new Date());
-
-				String[] features = fields[1].split(",");
-				//System.out.println(Arrays.toString(features));
-				for(int i=0;i<features.length - 1;i++) {
-					values.put(headers.get(i), features[i]);
-					extractors.put(headers.get(i), new NumericalExtractor());
-					//System.out.println(headers[i] + ": " + features[i]);
-				}
-				//String measurements = fields[1].substring(0, fields[1].lastIndexOf(","));
-				String label = fields[1].substring(fields[1].lastIndexOf(",")+1);
-				//values.put("meassure", measurements);
-				//extractors.put("meassure", new NumericalExtractor());
-				
-				target = label;
-				extractors.put("classification", new NumericalExtractor());
+	public void fill(String key, String data) {
+		data = data.replace(" ","").toLowerCase();
+		if(data != "") { //if record is not empty
+			try {
+				//This sleep is added for the reason that I am assigning the timestamps to the used dataset and thus we should have a little gap in time to obtain different microseconds
+				TimeUnit.MICROSECONDS.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			
+			// skip if this record contains the header of the csv file.
+			if(data.contains("duration")) {
+				return;
+			}
+			setSourceFromKafkaKey(key);
+			fillTimeStamp(new Date()); 
+
+			String[] features = data.split(getSeparatorFieldsRawData());
+
+			for(int i=0;i<features.length - 1;i++) {
+				values.put(headers.get(i), features[i]);
+				extractors.put(headers.get(i), new NumericalExtractor());
+			}
+			//String measurements = fields[1].substring(0, fields[1].lastIndexOf(","));
+			//String label = data.substring(data.lastIndexOf(",")+1);
+			setTarget(features[features.length-1]);
+			extractors.put("classification", new NumericalExtractor());
+			//values.put("meassure", measurements);
+			//extractors.put("meassure", new NumericalExtractor());			
 		}
 	}
-	
-	@Override
-	public long getTimeStampMillis() {
-		Calendar cal = Calendar.getInstance();	
-		SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yy HH:mm:ss.SSS", Locale.ENGLISH);
-		Date dateTime;
-		try {
-			dateTime = format.parse(timestamp);
-			cal.setTime(dateTime);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}			
-		return cal.getTimeInMillis();
-	}
+
 }

@@ -17,8 +17,10 @@ public class AccuracyMultiClassClassificationMetric extends MultiClassClassifica
 	}
 	
 	/**
-	 * This method is for evaluating the Accuracy metric for the Multi-Class Classification problems
-	 * 
+	 * It evaluates the Accuracy metric for the Multi-Class Classification problems.
+	 * It computes the accuracy of the time records outputs regarding their target (expected output). 
+	 * It considers target/output with just one value.
+	 *  
 	 * @return Vector<Double> which contains the calculation of the Accuracy
 	 */
 	@Override
@@ -57,8 +59,6 @@ public class AccuracyMultiClassClassificationMetric extends MultiClassClassifica
 		
 		//Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
-
-		System.out.println("Computing Accuracy Metric for " + id + "=" + result);
 		
 		return ret;
 	}

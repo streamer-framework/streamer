@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
     zookeeper:
-        image: confluentinc/cp-zookeeper:6.0.1
+        image: confluentinc/cp-zookeeper:6.2.1
         hostname: zookeeper
         container_name: zookeeper
         ports:
@@ -14,7 +14,7 @@ services:
           - streamer_network
     
     kafka:
-        image: confluentinc/cp-kafka:6.0.1
+        image: confluentinc/cp-kafka:6.2.1
         hostname: kafka
         container_name: kafka
         depends_on:
@@ -37,7 +37,7 @@ services:
           - streamer_network
 
     redis:
-        image: redis:6.0.9-alpine3.12
+        image: redis:6.2
         container_name: redis
         environment:
             - ALLOW_EMPTY_PASSWORD=yes
@@ -49,7 +49,7 @@ services:
           - streamer_network
           
     influxdb:
-        image: influxdb:1.8.3
+        image: influxdb:1.8.9
         container_name: influxdb
         ports:
             - 8086:8086
@@ -59,7 +59,7 @@ services:
           - streamer_network            
           
     elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
         container_name: es01
         environment:
             - node.name=es01
@@ -67,6 +67,7 @@ services:
             - cluster.initial_master_nodes=es01
             - bootstrap.memory_lock=true
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+            - xpack.security.enabled=false
         ulimits:
           memlock:
             soft: -1
@@ -79,11 +80,12 @@ services:
           - streamer_network
           
     kibana:
-        image: docker.elastic.co/kibana/kibana:7.10.1
+        image: docker.elastic.co/kibana/kibana:7.15.0
         container_name: kibana
         environment:
-            SERVER_NAME: http://kibana:5600
-            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+            - SERVER_NAME=http://kibana:5600
+            - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+            - xpack.security.enabled=false
         ports:
           - 5601:5601
         depends_on:

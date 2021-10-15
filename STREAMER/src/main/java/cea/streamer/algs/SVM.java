@@ -18,7 +18,7 @@ public class SVM extends MLalgorithms{
 	public void learn(Vector<TimeRecord> data, String id) {
 		String learningFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/svmTrain.R";
 		//String learningFile = "./src/main/resources/algs/svmTrain.R";
-		RedisConnector.dataToRedis(data, "datatrain"+id);
+		RedisConnector.dataToRedis(data,RedisConnector.DATATRAIN_TAG,id);
 		CodeConnectors.execRFile(learningFile,id);
 	}
 	
@@ -33,7 +33,7 @@ public class SVM extends MLalgorithms{
 		/* Test part */
 		String testFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/svmTest.R";
 		//String testFile = "./src/main/resources/algs/svmTest.R";
-		RedisConnector.dataToRedis(data, "datatest"+id);
+		RedisConnector.dataToRedis(data,RedisConnector.DATATEST_TAG,id);
 		CodeConnectors.execRFile(testFile,id);
 	}
 

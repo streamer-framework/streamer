@@ -40,17 +40,17 @@ public class XGBoost extends MLalgorithms {
 	public XGBoost() {
 
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/xgboost.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"xgboost.props").openStream()) {
 
 			properties.load(props);
-			// String booster = properties.getProperty("booster").trim();
-			objective = properties.getProperty("objective").trim();
-			num_class = properties.getProperty("num.class").trim();
+			// String booster = properties.getProperty("booster").replace(" ","");
+			objective = properties.getProperty("objective").replace(" ","");
+			num_class = properties.getProperty("num.class").replace(" ","");
 
-			nround = properties.getProperty("nround.tuning").trim();
-			colsubsample = properties.getProperty("colsub.sample.tuning").trim();
-			maxdepth_minchild = properties.getProperty("maxdepth.minchild.tuning").trim();
-			gamma = properties.getProperty("gamma.tuning").trim();
+			nround = properties.getProperty("nround.tuning").replace(" ","");
+			colsubsample = properties.getProperty("colsub.sample.tuning").replace(" ","");
+			maxdepth_minchild = properties.getProperty("maxdepth.minchild.tuning").replace(" ","");
+			gamma = properties.getProperty("gamma.tuning").replace(" ","");
 
 			connect();
 		} catch (IOException e) {
@@ -60,31 +60,24 @@ public class XGBoost extends MLalgorithms {
 	}
 	
 	private void connect() {
-		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/redis.props").openStream()) {
-			properties.load(props);
-			Jedis jedis = new Jedis(properties.getProperty("host").trim());
-
-			jedis.del("param");
-			jedis.del("tuning");
-			// jedis.rpush("param","booster " + booster);
-			jedis.rpush("param", "objective " + objective);
-			jedis.rpush("param", "num_class " + num_class);
-			jedis.rpush("tuning", "nround " + nround);
-			jedis.rpush("tuning", "colsubsample " + colsubsample);
-			jedis.rpush("tuning", "maxdepth_minchild " + maxdepth_minchild);
-			jedis.rpush("tuning", "gamma " + gamma);
-			jedis.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Jedis jedis = RedisConnector.getJedis();
+		jedis.del("param");
+		jedis.del("tuning");
+		// jedis.rpush("param","booster " + booster);
+		jedis.rpush("param", "objective " + objective);
+		jedis.rpush("param", "num_class " + num_class);
+		jedis.rpush("tuning", "nround " + nround);
+		jedis.rpush("tuning", "colsubsample " + colsubsample);
+		jedis.rpush("tuning", "maxdepth_minchild " + maxdepth_minchild);
+		jedis.rpush("tuning", "gamma " + gamma);
+		jedis.close();
 	}
 
 	@Override
 	public void learn(Vector<TimeRecord> data, String id) {
 		String learningFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/xgbmodelTrain.R";
 //		String testFile = "./src/main/resources/algs/xgbmodelTrain.R";
-		RedisConnector.dataToRedis(data, "datatrain" + id);
+		RedisConnector.dataToRedis(data,RedisConnector.DATATRAIN_TAG,id);
 		CodeConnectors.execRFile(learningFile, id);
 	}
 
@@ -92,7 +85,7 @@ public class XGBoost extends MLalgorithms {
 	public void run(Vector<TimeRecord> data, String id) {
 		String testFile = new GlobalUtils().getAbsoluteBaseProjectPath()+"src/main/resources/algs/xgbmodelTest.R";
 //		String testFile = "./src/main/resources/algs/xgbmodelTest.R";
-		RedisConnector.dataToRedis(data, "datatest" + id);
+		RedisConnector.dataToRedis(data,RedisConnector.DATATEST_TAG,id);
 		CodeConnectors.execRFile(testFile, id);
 	}
 

@@ -47,9 +47,6 @@ public class F1scoreMultiClassClassificationMetric extends MultiClassClassificat
 		result = this.roundAvoid(result, 3);
 
 		ret.add(result);
-
-		System.out.println("Computing F1-Score Metric for " + id + "=" + result);
-
 		return ret;
 	}
 }

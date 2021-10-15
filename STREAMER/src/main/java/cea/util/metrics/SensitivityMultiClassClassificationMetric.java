@@ -13,7 +13,7 @@ public class SensitivityMultiClassClassificationMetric extends MultiClassClassif
 	 */
 	@Override
 	public String getName() {
-		return "sensitivity";
+		return "sensitivity/recall";
 	}
 	
 	/**
@@ -43,10 +43,9 @@ public class SensitivityMultiClassClassificationMetric extends MultiClassClassif
 		result = this.roundAvoid(total_sensitivity, 3);
 		
 		ret.add(result);
-
-		System.out.println("Computing Sensitivity/Recall Metric for " + id + "=" + result);
-		System.out.println("True Positive" + total_tp);
-		System.out.println("False Negative" + total_fn);
+	
+		System.out.println("["+id+"] True Positive " + total_tp);
+		System.out.println("["+id+"] False Negative " + total_fn);
 		
 		return ret;
 	

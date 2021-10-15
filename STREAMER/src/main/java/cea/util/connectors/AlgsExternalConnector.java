@@ -1,6 +1,7 @@
 package cea.util.connectors;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Vector;
 
 import cea.streamer.ModelRunner;
@@ -41,7 +42,7 @@ public class AlgsExternalConnector {
 
 		prePostProcessor = null;
 
-		Class recC;
+		Class<?> recC;
 		if (prePostproc != null) {
 			try {
 				recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+prePostproc);
@@ -53,7 +54,7 @@ public class AlgsExternalConnector {
 		}
 		
 		if (metrics != null) {					
-			String[] aux = (metricsNames.trim()).split(",");
+			String[] aux = (metricsNames.replace(" ","")).split(",");
 			metrics = new Vector<Metric>();				
 			for(String metricName: aux) {
 				try {
@@ -66,7 +67,6 @@ public class AlgsExternalConnector {
 			}
 		}
 		
-		MLalgorithms g= null;
 		try {
 			recC = Class.forName((GlobalUtils.packageAlgs+".")+algorithmName);
 			try {
@@ -143,7 +143,7 @@ public class AlgsExternalConnector {
 	 * @param modelStoredPath Path where trained model will be stored
 	 * @return Outputs (if applicable as it is the case of clustering)
 	 */
-	public Vector<String> learnModel(String file, String modelStoredPath) {
+	public Vector<List<String>> learnModel(String file, String modelStoredPath) {
 		Vector<String> files = new Vector<String>();
 		files.add(file);
 		return learnModel(files, modelStoredPath);
@@ -155,7 +155,7 @@ public class AlgsExternalConnector {
 	 * @param modelStoredPath Path where trained model will be stored
 	 * @return Outputs (if applicable as it is the case of clustering)
 	 */
-	public Vector<String> learnModel(Vector<String> files, String modelStoredPath) {
+	public Vector<List<String>> learnModel(Vector<String> files, String modelStoredPath) {
 		Vector<TimeRecord> recordsDB = GlobalUtils.generateTimeRecords(id, recordName, files);
 
 		Trainer train = new Trainer();
@@ -175,10 +175,10 @@ public class AlgsExternalConnector {
 	 * 			NULL if model is stored in redis not in disk
 	 * @return Vector<String> or results
 	 */
-	private Vector<String> runModel(Vector<TimeRecord> recordsDB, String modelPath) {		
+	private Vector<List<String>> runModel(Vector<TimeRecord> recordsDB, String modelPath) {		
 		
 		if(modelPath != null) {
-			GlobalUtils.restoreModelFromFile(id, modelPath); //retreives the model from file and stores it in redis
+			GlobalUtils.modelFromDiskToRedis(id, modelPath); //retreives the model from file and stores it in redis
 		}
 	
 		//Call the model
@@ -196,7 +196,7 @@ public class AlgsExternalConnector {
 	 * 			NULL if model is stored in redis not in disk
 	 * @return Vector<String> or results, for no inputs null outputs
 	 */
-	public Vector<String> runModel(String[][] inputs, String modelPath) {
+	public Vector<List<String>> runModel(String[][] inputs, String modelPath) {
 		if(inputs != null) {
 			Vector<TimeRecord> recordsDB = GlobalUtils.generateTimeRecords(id, recordName, inputs);					
 			return runModel(recordsDB, modelPath);
@@ -212,7 +212,7 @@ public class AlgsExternalConnector {
 	 * 			NULL if model is stored in redis not in disk
 	 * @return Vector<String> or results
 	 */
-	public Vector<String> runModel(String fileInputs, String modelPath) {
+	public Vector<List<String>> runModel(String fileInputs, String modelPath) {
 		Vector<String> files = new Vector<String>();
 		files.add(fileInputs);
 		Vector<TimeRecord> recordsDB = GlobalUtils.generateTimeRecords(id, recordName, files);
@@ -229,7 +229,7 @@ public class AlgsExternalConnector {
 	 * List hyperparams need for the algorithm
 	 */
 	public void getAlgHyperparams() {
-		System.out.println(algorithm.listNeededHyperparams());
+		System.out.println("["+id+"] "+algorithm.listNeededHyperparams());
 	}
 
 }

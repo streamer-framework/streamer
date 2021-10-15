@@ -39,4 +39,24 @@ public abstract class MLalgorithms {
 			String param = "No parameters needed\n";
 			return param;
 	}
+
+	/**
+	 * Get attribute updateModel.
+	 * This attribute is used to avoid storing the data in case of online learning algorithms. 
+	 * When the model is updated, the data is not needed anymore in the next training phase (it will be erased from the DB). 
+	 * @return updateModel (true or false)
+	 */
+	public boolean isUpdateModel() {
+		return updateModel;
+	}
+
+	/**
+	 * Set attribute updateModel.
+	 * This attribute is used to avoid storing the data in case of online learning algorithms. When the model is updated, the data is not needed
+	 * anymore in the next training phase. 
+	 * @param updateModel (true or false)
+	 */
+	public void setUpdateModel(boolean updateModel) {
+		this.updateModel = updateModel;
+	}
 }

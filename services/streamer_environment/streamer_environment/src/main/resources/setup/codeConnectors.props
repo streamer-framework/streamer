@@ -1,0 +1,10 @@
+# Python/R/etc. invoker in Win/Linux/MacOS
+
+# Windows
+#py_exec_path = conda activate ts_env && python
+#r_exec_path = Rscript
+
+# Linux/MacOS
+py_exec_path = python3
+r_exec_path = Rscript
+

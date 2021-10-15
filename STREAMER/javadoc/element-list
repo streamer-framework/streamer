@@ -1,9 +1,0 @@
-cea
-cea.producer
-cea.streamer
-cea.streamer.algs
-cea.streamer.core
-cea.util
-cea.util.connectors
-cea.util.metrics
-cea.util.prepostprocessors

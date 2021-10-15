@@ -31,9 +31,9 @@ public class KibanaConnector {
 
 	public static void init() {
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/kibana.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"kibana.props").openStream()) {
 			properties.load(props);
-			host = properties.getProperty("host").trim();
+			host = properties.getProperty("host").replace(" ","");
 			if (host.equals("localhost"))
 				host = "http://" + host + ":5601";
 		} catch (IOException e) {
@@ -55,10 +55,6 @@ public class KibanaConnector {
 			http.setDoOutput(true);
 
 			String response = null;
-
-			//System.out.println(http.getResponseCode());
-			//System.out.println(http.getResponseMessage());
-
 			String json_output = "";
 			// Read the response
 			BufferedReader d = new BufferedReader(new InputStreamReader(http.getInputStream()));
@@ -80,7 +76,7 @@ public class KibanaConnector {
 			d.close();
 		} catch (ConnectException e) {
 			//in this case kibana is not running or not required
-			System.out.println("Kibana is missing! If Kibana is not required, just ignore this line");
+			System.out.println("["+id+"] Kibana is missing! If Kibana is not required, just ignore this line");
 			return true;
 		} catch (IOException | ParseException e) {
 			e.printStackTrace();
@@ -113,8 +109,6 @@ public class KibanaConnector {
 
 			// Parse the file to JSON
 			data = (JSONObject) parser.parse(new FileReader(file.getAbsolutePath()));
-
-			//System.out.println(data.toJSONString());
 			http.setDoOutput(true);
 
 			// Write the JSON with the POST request
@@ -126,9 +120,6 @@ public class KibanaConnector {
 			outStream.close();
 
 			String response = null;
-
-			//System.out.println(http.getResponseCode());
-			//System.out.println(http.getResponseMessage());
 
 			// Read the response
 			BufferedReader d = new BufferedReader(new InputStreamReader(http.getInputStream()));

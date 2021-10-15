@@ -1,0 +1,13 @@
+# The algorithm used for this application is the KDD CUP 99 Cybersecurity dataset
+algorithm = HoeffdingTreeClassifier
+# Online training will be performed every 20 seconds
+training.interval = 20000
+# The maximum allowed data for training
+training.maxdata = 5000000
+#10000000
+# This source is used for Offline training 
+#training.source = ../data/data_kdd-cup-99/binary_classification_kdd_cup_99.csv
+# configurations for evaluation metrics
+evaluation.metrics = AccuracyMultiClassClassificationMetric,SensitivityMultiClassClassificationMetric,PrecisionMultiClassClassificationMetric,F1scoreMultiClassClassificationMetric
+#this should be optional
+classes.number=23

@@ -37,8 +37,6 @@ public class F1scoreBinaryClassificationMetric extends BinaryClassificationMetri
 		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
-				
-		System.out.println("Computing F1-Score Metric for " + id + "=" + result);
 		return ret;
 	}
 }

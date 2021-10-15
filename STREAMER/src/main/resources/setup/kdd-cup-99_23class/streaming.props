@@ -1,5 +1,6 @@
 # dev
 bootstrap.servers=localhost:9092
+
 # prod
 #bootstrap.servers=http://kafka:29092
 
@@ -20,21 +21,21 @@ containsHeader = true
 # The path of the data used in the kdd cup 99 cybersecurity project (online classification algorithm)
 datafile = ../data/data_kdd-cup-99/multiclass_classification_kdd_cup_99.csv
 
-### Production Type (ONLINE /OFFLINE)
-producerType = OFFLINE
+### Production Type (TIMESTAMP /BLOCK)
+producerType = BLOCK
 
-## Production ONLINE
+## Production TIMESTAMP
 epsilonne = -3000
 scale = 1800
 
-## Production OFFLINE (by blocks)
+## Production BLOCK (by blocks)
 maxBlocks = 1000
 recordsPerBlock = 50
 producerTimeInterval = 10000
 
 
-### Production Type (ONLINE /OFFLINE)
-producerType = OFFLINE
+### Production Type (TIMESTAMP /BLOCK)
+producerType = BLOCK
 epsilonne = -3000
 scale = 1800
 
@@ -47,7 +48,7 @@ value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 # fast session timeout makes it more fun to play with failover
 session.timeout.ms=10000
 # These buffer sizes seem to be needed to avoid consumer switching to
-# a mode where it processes one bufferful every 5 seconds with multiple
+# a mode where it processes one buffer full every 5 seconds with multiple
 # timeouts along the way.  No idea why this happens.
 fetch.min.bytes=50000
 receive.buffer.bytes=262144

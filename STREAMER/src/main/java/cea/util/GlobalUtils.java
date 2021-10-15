@@ -9,16 +9,16 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import org.apache.maven.model.Model;
@@ -36,23 +36,29 @@ import cea.util.connectors.RedisConnector;
  */
 public class GlobalUtils {
 	
+	/* Location paths */
 	static String pathPrePostProcessors = "./src/main/java/cea/util/prepostprocessors";
 	static String pathAlgs = "./src/main/java/cea/streamer/algs";
 	static String pathTimeRecords = "./src/main/java/cea/streamer/core";
 
+	/* Package paths */
 	static public String packageMetrics = "cea.util.metrics";
 	static public String packagePrePostProcessors = "cea.util.prepostprocessors";
 	static public String packageAlgs = "cea.streamer.algs";
 	static public String packageTimeRecords = "cea.streamer.core";
+	
+	/* Resources paths */
+	static public String resourcesPathPropsFiles = "setup/";
+	
 
 	/**
-	 * Convert params in array of string to a TreeMap
+	 * Convert params in array of string to a LinkedHashMap
 	 * @param hyperparms
 	 * @return
 	 * @throws Exception
 	 */
 	public static Map<String, String> getMLAlgorithmHyperParams(String[] hyperparms) throws Exception{
-		Map hyperParams =new TreeMap<String, String>();
+		Map hyperParams =new LinkedHashMap<String, String>();
 		for(int i = 0; i<hyperparms.length;i++) {
 			String[]param =hyperparms[i].split("=");
 			hyperParams.put(param[0],param[1]);
@@ -86,19 +92,22 @@ public class GlobalUtils {
 	}
 
 	/**
-	 * Restore the model from
-	 * 
-	 * @param serObj
-	 * @param id
+	 * Restore the model read from file into Redis
+	 *
+	 * @param id of the process
+	 * @param modelPathFile file path where the model is stored
 	 */
-	public static  String restoreModelFromFile(String id, String modelPathFile) {
+	public static  String modelFromDiskToRedis(String id, String modelPathFile) {
 		String model = null;
 		try {
 			FileInputStream fileIn = new FileInputStream(modelPathFile);
-			ObjectInputStream objectIn = new ObjectInputStream(fileIn);
-			model = (String)objectIn.readObject();
-			objectIn.close();
-		} catch (IOException | ClassNotFoundException e) {
+			//ObjectInputStream objectIn = new ObjectInputStream(fileIn);
+			//model = (String)objectIn.readObject();
+			//objectIn.close();
+			BufferedReader br = new BufferedReader(new InputStreamReader(fileIn));
+			model = br.readLine();
+			br.close();
+		} catch (IOException /*| ClassNotFoundException */e) {
 			System.err.println("Model could not be extracted from file path: "+modelPathFile);
 			e.printStackTrace();			
 		}
@@ -119,13 +128,10 @@ public class GlobalUtils {
 	 * @param records
 	 * @return
 	 */
-	public static  Vector<String> getOutputs(Vector<TimeRecord> records) {
-		Vector<String> outputs = new Vector<String>();
-		Iterator<TimeRecord> it = records.iterator();
-		TimeRecord record;
-		while (it.hasNext()) {
-			record = it.next();
-			if(record.getOutput() != null) {
+	public static Vector<List<String>> getOutputs(Vector<TimeRecord> records) {
+		Vector<List<String>> outputs = new Vector<List<String>>();
+		for(TimeRecord record: records) {
+			if(!record.getOutput().isEmpty()) {
 				outputs.add(record.getOutput());
 			}
 		}
@@ -147,7 +153,7 @@ public class GlobalUtils {
 		TimeRecord recObj;
 		String line = null;
 		BufferedReader br = null;
-		Class recC;
+		Class<?> recC;
 		for (String file : sourceFiles) {
 			try {
 				br = Files.newBufferedReader(Paths.get(file));
@@ -157,10 +163,12 @@ public class GlobalUtils {
 
 					try {
 						recC = Class.forName((GlobalUtils.packageTimeRecords+".")+recordName);
-						recObj = (TimeRecord)recC.newInstance();
-						recObj.fill(id + ";" + line);
+						recObj = (TimeRecord)recC.getDeclaredConstructor().newInstance();						
+						recObj.fill(id, line);
 						records.add(recObj);
-					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+					} catch (ClassNotFoundException | InstantiationException | IllegalAccessException |
+							IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+							| SecurityException e) {
 						System.err.println("Record do not exist in the platform. Please select one from the list:\n"+listAvaliableTimeRecords());
 						e.printStackTrace();
 					}
@@ -198,10 +206,12 @@ public class GlobalUtils {
 			line+=""+a[a.length-1];
 			try {
 				recC = Class.forName((GlobalUtils.packageTimeRecords+".")+recordName);
-				recObj = (TimeRecord)recC.newInstance();
-				recObj.fill(id + ";" + line);
+				recObj = (TimeRecord)recC.getDeclaredConstructor().newInstance();
+				recObj.fill(id,line);
 				records.add(recObj);
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | 
+					IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+					| SecurityException e) {
 				System.err.println("Record do not exist in the platform. Please select one from the list:\n"+listAvaliableTimeRecords());
 				e.printStackTrace();
 			}						
@@ -213,23 +223,20 @@ public class GlobalUtils {
 	 * Save set of records to file
 	 * @param records to save
 	 * @param file path
-	 * @param separation separation of values
+	 * @param separator of values
 	 * @param labels True if write headers of the data
 	 */
-	public static void saveRecordsToFile(Vector<TimeRecord> records, String file, String separation, boolean labels) {
+	public static void saveRecordsToFile(Vector<TimeRecord> records, String file, String separator, boolean labels) {
 		BufferedWriter bw;
 		try {
 			bw = new BufferedWriter(new FileWriter( file));
 		
-			Iterator<TimeRecord> it = records.iterator();
-			TimeRecord record=null;	
-			while (it.hasNext()) {
-				record = it.next();
+			for(TimeRecord record: records) {
 				if(labels) {
-					bw.write(record.exportHeaderToStringFormat(separation)+"\n");
+					bw.write(record.exportHeaderToStringFormat(separator)+"\n");
 					labels=false;
 				}
-				bw.write(record.exportToStringFormat(separation)+"\n");
+				bw.write(record.exportToStringFormat(separator)+"\n");
 			}
 			
 			bw.close();
@@ -335,10 +342,7 @@ public class GlobalUtils {
 	 * @param records to print
 	 */
 	public static void printSet(Vector<TimeRecord> records, boolean labels) {
-		Iterator<TimeRecord> it = records.iterator();
-		TimeRecord record;
-		while (it.hasNext()) {
-			record = it.next();
+		for(TimeRecord record: records) {
 			if(labels) {
 				System.out.println(record.exportHeaderToStringFormat(" "));
 				labels=false;
@@ -351,7 +355,6 @@ public class GlobalUtils {
 	
 ///////////////////////////////////////////////// OTHERS ///////////////////////////////////////////////
 	
-	
 	/**
 	 * Get the absolute path of the project (base.dir)
 	 * @return absolute project path (base.dir)
@@ -360,17 +363,18 @@ public class GlobalUtils {
 		MavenXpp3Reader reader = new MavenXpp3Reader();
 		String project_name = "STREAMER";
 		File pom_file = new File("pom.xml");
-		
-		
-		if(pom_file.exists()) {
+
+		if(pom_file.exists()) {		
 			try {
 				Model model = reader.read(new FileReader(pom_file));
 				project_name = model.getName();
 				
 			} catch (IOException | XmlPullParserException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}else {
+			project_name = "framework/";
+			return project_name;
 		}
 		String aux = this.getClass().getClassLoader().getResource("algs/neuralNetworkTrain.R").toString();	
 		String projectTree = project_name + "/";//"dsplatform/STREAMER/";
@@ -405,5 +409,21 @@ public class GlobalUtils {
 		return numeric;
 	}
 
+	/**
+	 * Convert a list in to a String 
+	 * @param list of elements
+	 * @param separator between elements
+	 * @return String with the list
+	 */
+	public static String listToString(List<String> list, String separator) {
+		String ret = "";		
+		for(int i=0; i<list.size();i++) {
+			ret+=list.get(i);
+			if(i <(list.size()-1)) {//if it is not the last element
+				ret+=separator;
+			}
+		}
+		return ret;		
+	}
 	
 }

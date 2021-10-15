@@ -13,7 +13,7 @@ public class SensitivityBinaryClassificationMetric extends BinaryClassificationM
 	 */
 	@Override
 	public String getName() {
-		return "sensitivity";
+		return "sensitivity/recall";
 	}
 	
 	/**
@@ -31,8 +31,6 @@ public class SensitivityBinaryClassificationMetric extends BinaryClassificationM
 		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
-				
-		System.out.println("Computing Sensitivity/Recall Metric for " + id + "=" + result);
 		return ret;
 	}
 	

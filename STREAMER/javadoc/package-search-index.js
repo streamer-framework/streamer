@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"cea"},{"l":"cea.producer"},{"l":"cea.streamer"},{"l":"cea.streamer.algs"},{"l":"cea.streamer.core"},{"l":"cea.util"},{"l":"cea.util.connectors"},{"l":"cea.util.metrics"},{"l":"cea.util.prepostprocessors"}]

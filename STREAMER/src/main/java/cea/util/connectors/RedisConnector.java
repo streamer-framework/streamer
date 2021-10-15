@@ -2,8 +2,9 @@ package cea.util.connectors;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -15,93 +16,130 @@ import redis.clients.jedis.Jedis;
 
 public class RedisConnector {
 	
+	public final static String TARGET_TAG="target";
+	public final static String OUTPUTS_TAG="outputs";
+	public final static String SEPARATOR_TAG="separator";
+	public final static String DATATRAIN_TAG="datatrain";
+	public final static String DATATEST_TAG="datatest";
+	public final static String MODEL_TAG = "model";
+	
 	/**
 	 * Host of the Redis database
 	 */
-	static String host;
+	static String host;	
+
 
 	/**
 	 * Store a vector of time records in Redis
 	 *
 	 * @param data the vector of time records
-	 * @param key  the key associated with the data
+	 * @param tag (extra info to id)
+	 * @param id
 	 */
-	public static void dataToRedis(Vector<TimeRecord> data, String key) {
-
+	public static void dataToRedis(Vector<TimeRecord> data, String tag, String id) {
+		String key = tag+id;
 		Jedis jedis = getJedis();	
-
-		//System.out.println("Connection to Redis server");
+		
+		//System.out.println("["+id+"] Connection to Redis server");
+		//Clean the of keys of Redis
 		jedis.del(key);
-		jedis.del(key+"target");
-		//remove the keys for the output concerning the previous testing data
-		jedis.del("classifResults"+key);
-		jedis.del("separation"+key);
-		Iterator<TimeRecord> it = data.iterator();
-		while (it.hasNext()) {
-			TimeRecord record = it.next();
-			//System.err.println(record.toString());			
-			String S = record.getTimeStamp() + ";";
+		jedis.del(key+TARGET_TAG);
+		jedis.del(OUTPUTS_TAG+id);
+		
+		StringBuilder S=null;
+		for (TimeRecord record: data) {			
+			S = new StringBuilder(record.getTimeStamp() + record.getSeparatorTSRedis());
 			for (String keyValue : record.getValues().keySet()) {
-				S += record.getValues().get(keyValue) + " ";
+				S.append(record.getValues().get(keyValue) + record.getSeparatorFieldsRedis());
 			}
-			S = S.substring(0, S.lastIndexOf(" "));
-			jedis.rpush(key, S);
-			if(record.getTarget() != null) {//there is a target (expected output)
-				jedis.rpush(key+"target", record.getTarget());
+			jedis.rpush(key, S.substring(0, S.lastIndexOf(record.getSeparatorFieldsRedis())).toString());
+			if(!record.getTarget().isEmpty()) {//there is a target (expected output)
+				jedis.rpush(key+TARGET_TAG, GlobalUtils.listToString(record.getTarget(),record.getSeparatorFieldsRedis()));
 			}
 		}
 		
 		jedis.close();
-		//System.out.println("Data stored in Redis");
+		//System.out.println("["+id+"] Data stored in Redis");
 	}
 	
 	/**
-	 * Method that gets back the data stored in Redis
-	 *
-	 * @param key  Redis key
-	 * @param name name of the time records when the data have been stored in Redis
+	 * Replace the values of the record by the new ones retrieved from Redis
+	 * IMPORTANT: records must preserve the order
+	 * 
+	 * @param tag (extra info to id)
+	 * @param id 
+	 * @param containsTargets true if data retrieved from Redis contains the targets (which are stored in the records), false otherwise
 	 * @return the vector of time records corresponding to the key
 	 */
-	public static Vector<TimeRecord> redisToRecords(String key, String name, String id) {
-		Jedis jedis = getJedis();	
-		Vector<TimeRecord> records = new Vector<TimeRecord>();
+	public static Vector<TimeRecord> redisToRecords(Vector<TimeRecord> records, String tag, String id, boolean containsTargets) {
+		String key = tag+id;
+		Jedis jedis = RedisConnector.getJedis();	
 		List<String> dataStr = jedis.lrange(key, 0, -1);	
 		jedis.close();
-		
-		Iterator<String> it = dataStr.iterator();
-		while (it.hasNext()) {
-			String s = it.next();	
-			int lastIdx = s.length() - 1;
-			/* get the time record */
+		int i=0;
+		for(String s : dataStr ) {
+			
+			int lastIdx = s.length() - 1; //there is a bug in rR so it gives back weird characters from Redis, this is a filter, to remove when bug is solved
 			while (Character.isDigit(s.charAt(lastIdx)) || Character.isLetter(s.charAt(lastIdx)) || s.charAt(lastIdx) == ';'
 					|| s.charAt(lastIdx) == '-' || s.charAt(lastIdx) == ':' || s.charAt(lastIdx) == ' '
 					|| s.charAt(lastIdx) == '.') {//it eliminates weird characters
 				lastIdx--;
 			}
-			String recordStr = name + ";" + s.substring(lastIdx + 1, s.length());
-			recordStr = recordStr.replace("  "," ");
-			//System.err.println(recordStr);
-			//Construct TimeRecord instance accordingly to streaming properties
-			String origin = id;
-			if (id.equals("default")) {
-				origin = ".";
+			String[] fields = (s.substring(lastIdx + 1, s.length())).split(records.get(0).getSeparatorFieldsRawData());
+			//String[] fields = s.split(records.get(0).getSeparatorRawData());
+			Map<String,String> values = records.get(i).getValues();
+			for (String keyValue : values.keySet()) { //replace the values of the record by the new ones stored in Redis
+				records.get(i).setValue(values.get(keyValue), fields[0]);					
 			}
-			Properties properties = new Properties();
-			try (InputStream props = Resources.getResource("setup/"+origin + "/" + "streaming.props").openStream()) {
-				properties.load(props);
-				String problemType = (GlobalUtils.packageTimeRecords+".") + properties.getProperty("problem.type").trim();
-				Class recC = Class.forName(problemType + "Record");
-				TimeRecord recObj = (TimeRecord) recC.newInstance();
-				recObj.fill(recordStr);
-				records.add(recObj);
-
-			} catch (IOException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-				e.printStackTrace();
+			if(containsTargets) { //replace also the targets
+				records.get(i).setTarget(fields[1], records.get(i).getTargetLabel());
 			}
-
+			i++;
 		}
+		jedis.del(key); //delete old instances just retrieved from
+		jedis.close();
 		return records;
 	}
+	
+	/**
+	 * Method that gets back the data stored in Redis
+	 * IMPORTANT: records must preserve the order
+	 * 
+	 * @param records Current time records vector 
+	 * @param tag (extra info to id)
+	 * @param id 
+	 * @return Vector of time records updated with redis values corresponding to the key
+	 */
+	public static Vector<TimeRecord> retrieveOutput(Vector<TimeRecord> records, String id) {
+		String key = OUTPUTS_TAG+id;		
+		Jedis jedis = getJedis();
+		List<String> predicted = jedis.lrange(key, 0, -1);		
+		String separatorFields = records.get(0).getSeparatorFieldsRedis();//by default, user can define its own separator token in source algorithm and set its value in this line
+		if(jedis.exists(SEPARATOR_TAG+id)) {
+			separatorFields = jedis.get(SEPARATOR_TAG+id); 		
+		}
+					
+		if(predicted != null) {
+			if(predicted.size() != records.size()) {
+				System.err.println("["+id+"] Outputs size ("+predicted.size()+") not matching the time records size ("+ records.size()+"). Outputs not stored!");
+			}else {
+				int i=0;
+				String[] outputs;
+				for(TimeRecord record: records) {
+					outputs = predicted.get(i).split(separatorFields);//we split if the output has several values					
+					record.setOutput(Arrays.asList(outputs));
+					i++;
+				}
+			}		
+		}
+	/*	//we clean the information just retrieved from Redis
+		jedis.del(OUTPUTS_LABEL+id);
+		jedis.del(SEPARATOR_LABEL+id); */
+		jedis.close();
+						
+		return records;
+	}
+	
 
 	/**
 	 * Clear and reset the keys in Redis (confusion matrix)
@@ -110,67 +148,51 @@ public class RedisConnector {
 
 		Jedis jedis = getJedis();
 		if(ids.length == 0) {//default producer
-			jedis.del("confMatdefault");//clear confusion matrix in redis
-		}else {
-			for(int i =0; i<ids.length; i++) {
-				jedis.del("confMat"+ids[i]);//clear confusion matrix in redis
-			}
-			
+			ids = new String[1];
+			ids[0] = "default";
 		}
+		
+		for(String id : ids) {
+			jedis.del("confMat"+id);//clear confusion matrix in redis (used in 2 algs)
+			jedis.del(DATATRAIN_TAG+id);
+			jedis.del(DATATEST_TAG+id);
+			jedis.del(DATATRAIN_TAG+id+TARGET_TAG);
+			jedis.del(DATATEST_TAG+id+TARGET_TAG);
+			jedis.del(OUTPUTS_TAG+id);
+			jedis.del(SEPARATOR_TAG+id);
+			System.out.println("["+id+"] Cleaning Redis Keys");
+		}							
 		jedis.close();
 	}
 	
-	
-	public static Vector<TimeRecord> retreiveOutput(Vector<TimeRecord> data, String key) {
+	public static void cleanModel(String id) {
 		Jedis jedis = getJedis();
-				
-		String predicted = jedis.get("classifResults"+key); 
-		String separation = jedis.get("separation"+key); 
-		
-		//List<String> pred = jedis.lrange("prueba", 0, -1);
-		if(predicted != null) {
-			String[] outputs = predicted.trim().split(separation);
-			int i=0;
-			Iterator<TimeRecord> it = data.iterator();
-			boolean error = false;
-			while (it.hasNext() && !error) {
-				TimeRecord record = it.next();
-			/*	while(outputs[i].trim().equals("") && i<outputs.length) {
-					i++;	
-				}	*/
-				if(i != outputs.length) {
-					record.setOutput(outputs[i]);
-				}else {
-					error = true;
-					System.err.println("Output not matching the time records input");
-				}
-				i++;
-			}		
-		}
-				
-		return data;
+		jedis.del(id+MODEL_TAG);
+		jedis.close();
+		System.out.println("["+id+"] Cleaning Redis model");
 	}
+	
 	
 	/**
 	 * Get the model stored in redis
 	 * @param id Identification of problem
-	 * @return model stored in redis under the name "model"+id
+	 * @return model stored in redis under the name id+model
 	 */
 	public static Object getModelFromRedis(String id) {
 		Jedis jedis = getJedis();				
-		String model = (String)jedis.get("model"+id); //devuelve lista o como???
+		String model = (String)jedis.get(id+MODEL_TAG); //serialized model
 		return model;
 	}
 
 	/**
 	 * Get the model stored in redis
 	 * @param id Identification of problem
-	 * @return model stored in redis under the name "model"+id
+	 * @return model stored in redis under the name MODEL_TAG+id
 	 */
 	public static void storeModelInRedis(String id, String model) {
 		Jedis jedis = getJedis();
-		jedis.del("model"+id);		
-		jedis.rpush("model"+id,model);
+		jedis.del(id+MODEL_TAG);		
+		jedis.set(id+MODEL_TAG,model);
 		jedis.close();
 	}
 	
@@ -179,16 +201,7 @@ public class RedisConnector {
 	 * @return instantiation of Redis
 	 */
 	public static Jedis getJedis() {
-		String host="localhost";
-		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/redis.props").openStream()) {
-			properties.load(props);
-			host = properties.getProperty("host").trim();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-
-		Jedis jedis = new Jedis(host);
+		Jedis jedis = new Jedis(getRedisIP(),Integer.parseInt(getRedisPort()));
 		return jedis;
 	}
 	
@@ -198,15 +211,15 @@ public class RedisConnector {
 	 * @return IP to connect Redis
 	 */
 	public static String getRedisIP() {
-		String host="localhost";
+		String host="localhost:6379";
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/redis.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"redis.props").openStream()) {
 			properties.load(props);
-			host = properties.getProperty("host").trim();
+			host = properties.getProperty("host").replace(" ","");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		return host.replace("http://", "").replace("https://", "").trim().split(":")[0];
+		return host.replace("http://", "").replace("https://", "").replace(" ","").split(":")[0];
 	}
 	
 	/**
@@ -215,15 +228,15 @@ public class RedisConnector {
 	 * @return port to connect Redis (in blank if non is indicated)
 	 */
 	public static String getRedisPort() {
-		String host="localhost";
+		String host="localhost:6379";
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource("setup/redis.props").openStream()) {
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"redis.props").openStream()) {
 			properties.load(props);
-			host = properties.getProperty("host").trim();
+			host = properties.getProperty("host").replace(" ","");
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		String[] ipPort = host.replace("http://", "").replace("https://", "").trim().split(":"); 
+		String[] ipPort = host.replace("http://", "").replace("https://", "").replace(" ","").split(":"); 
 		if(ipPort.length > 1) {
 			return ipPort[1];
 		}else {

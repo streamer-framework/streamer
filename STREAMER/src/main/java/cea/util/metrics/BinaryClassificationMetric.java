@@ -1,6 +1,5 @@
 package cea.util.metrics;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
@@ -78,21 +77,20 @@ public class BinaryClassificationMetric extends Metric {
 
 	private void calculateTrueFalse(Vector<TimeRecord> records) {
 		reinit();
-		Iterator<TimeRecord> it = records.iterator();
-
-		while (it.hasNext()) {
-			TimeRecord record = it.next();
-			if (record.getTarget() == null || record.getOutput() == null)
+		String target, output;
+		for(TimeRecord record: records) {		
+			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
 				continue;
-
-			if (record.getTarget().equals(record.getOutput())) {
-				if (record.getTarget().equals(positive)) {
+			output = record.getOutput().get(0);
+			target = record.getTarget().get(0);
+			if (target.equals(output)) {
+				if (target.equals(positive)) {
 					this.truePositive += 1;
 				} else {
 					this.trueNegative += 1;
 				}
 			} else {
-				if (record.getTarget().equals(positive) && record.getOutput().equals(negative)) {
+				if (target.equals(positive) && output.equals(negative)) {
 					this.falseNegative += 1;
 				} else {
 					this.falsePositive += 1;

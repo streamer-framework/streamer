@@ -59,8 +59,7 @@ public class RawRecord extends RecordDetails {
 
 
 	/**
-	 *Methode that write the record details in the same format we had it before simulation. the same one
-	 *which the program need to continue his process
+	 *Write the record details in the same format we had it before simulation.
 	 */
 	@Override
 	public String toString() {

@@ -25,26 +25,25 @@ import cea.util.connectors.RedisConnector;
 import cea.util.prepostprocessors.PrePostProcessor;
 
 /**
- * Class that allows to train al algorithm with all the data from the datafile/influxdb
- *
+ * Train an algorithm (setup in algs.props)
+ * Data obtained from database or from a file (path specified in streaming.props) *
  */
 public class Trainer {
 
 	/**
 	 * Train a model. Algorithm to use, source of data and other parameters are specified in the properties
-	 * @param origin Data source, options: 
+	 * @param id Data source, options: 
 	 * (i) influx 
 	 * (ii) folder where the properties files are located; or 
 	 * (iii) "" default folder of properties
 	 * @throws Exception
 	 */
-	public Vector<TimeRecord> trainAll(String sourceType, String origin, String modelStoredPath) throws Exception {
+	public Vector<TimeRecord> trainAll(String sourceType, String id, String modelStoredPath) throws Exception {
 		Vector<TimeRecord> records; 		
 		
-		String pathProperties = "";
-		
-		if(!origin.equals("default")) {
-			pathProperties = origin+"/";	
+		String origin = id;
+		if (origin.equals("default")) {
+			origin = ".";
 		}
 					
 		String problemType=null;
@@ -53,44 +52,48 @@ public class Trainer {
 		long trainingMaxData=-1;
 		Properties properties = new Properties();
 		PrePostProcessor prePostProcessor = null;
+		boolean containHeaders = false;
 		
-		try (InputStream props = Resources.getResource("setup/"+pathProperties+"algs.props").openStream() ){		 
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+origin+"/algs.props").openStream() ){		 
 			    properties.load(props);
-		    	className = (GlobalUtils.packageAlgs+".")+properties.getProperty("algorithm").trim();
+		    	className = (GlobalUtils.packageAlgs+".")+properties.getProperty("algorithm").replace(" ","");
 		    	trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));
 	            path = Paths.get( properties.getProperty("training.source") );
-	            System.out.println(path);
-				Log.displayLogTrain.info(origin+": "+path);				
+				Log.displayLogTrain.info("["+id+"]: "+path);				
 	 	} catch (IOException e) {
 			e.printStackTrace();
 		}		
-		Class recC;
-        try (InputStream props = Resources.getResource("setup/"+pathProperties+"streaming.props").openStream()) {
+		Class<?> recC;
+        try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+origin+"/streaming.props").openStream()) {
             properties = new Properties();
             properties.load(props);            
-	    	problemType = (GlobalUtils.packageTimeRecords+".")+properties.getProperty("problem.type").trim();	    			
+	    	problemType = (GlobalUtils.packageTimeRecords+".")+properties.getProperty("problem.type").replace(" ","");	    			
 	    	try {
 	    		if(properties.containsKey("consumer.prepostprocessor")) {	    				
 					recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+properties.getProperty("consumer.prepostprocessor"));
 					prePostProcessor = (PrePostProcessor)recC.getDeclaredConstructor().newInstance();
 	    		}
+	    		if (properties.containsKey("containsHeader")) { 
+			    	containHeaders = Boolean.parseBoolean(properties.getProperty("containsHeader").replace(" ","").toLowerCase());
+			    }
 			} catch (InstantiationException | IllegalArgumentException |  InvocationTargetException | SecurityException | IllegalAccessException | NoSuchMethodException |ClassNotFoundException e) {
-				System.err.println("The postprocessor class doen not exist");
+				System.err.println("["+id+"] The postprocessor class doen not exist");
 			}		
-        }
+        }      
 		
-		Class algC = Class.forName(className);
+		Class<?> algC = Class.forName(className);
 		MLalgorithms alg = (MLalgorithms)algC.getDeclaredConstructor().newInstance();	
 		
-		if(sourceType.trim().toLowerCase().equals("influx")) {//take the data from influxDB
+		if(sourceType.replace(" ","").toLowerCase().equals("influx")) {//take the data from influxDB
 			InfluxDBConnector.init();
 			//String name = path.toString().substring(0, path.toString().length()-4).replace('\\', '/').toLowerCase();
 			JSONParser parser = new JSONParser();
-			Object obj = parser.parse(new FileReader("json/data"+origin+".json"));
+			Object obj = parser.parse(new FileReader("json/data"+id+".json"));
 			JSONObject jsonObject = (JSONObject) obj;
 			String name = (String) jsonObject.get("fieldInflux");
 			System.err.println(name);
-			records = InfluxDBConnector.getRecordsDB(name, trainingMaxData, alg.updateModel);
+			//records = InfluxDBConnector.getRecordsDB(name, trainingMaxData, alg.isUpdateModel());
+			records = InfluxDBConnector.getRecordsDB(id, trainingMaxData, alg.isUpdateModel());
 			System.err.println(records);
 		}else{//read it from file
 			
@@ -101,12 +104,15 @@ public class Trainer {
 	        
 	        String line=null;
 			BufferedReader br=Files.newBufferedReader(path);
+			if(containHeaders) {
+				br.readLine();	// we ignore the header, it is not values
+			}
 			line = br.readLine();
 			while(line!=null){	        			
 		        line = line.replaceAll("\"", "").replaceAll("\t", "");
 		    	
 		        recObj = (TimeRecord)recC.getDeclaredConstructor().newInstance();
-				recObj.fill(origin+";"+line);				
+				recObj.fill(id,line);				
 				records.add( recObj );
 				
 				line = br.readLine();
@@ -114,13 +120,13 @@ public class Trainer {
 			br.close();				
 		}
 		
-		System.out.println("Training the algorithm "+algC);
-		records = train(origin, records, trainingMaxData, prePostProcessor, alg);
+		System.out.println("["+id+"] Training the algorithm "+algC);
+		records = train(id, records, trainingMaxData, prePostProcessor, alg);
 		
 		//We store the model in disk if requested
 		if(modelStoredPath != null) {
-			Object model = RedisConnector.getModelFromRedis(origin);
-			GlobalUtils.saveModelInFile(model, modelStoredPath+"/model_"+origin+"_"+alg.getClass().getName());
+			Object model = RedisConnector.getModelFromRedis(id);
+			GlobalUtils.saveModelInFile(model, modelStoredPath+"/model_"+id+"_"+alg.getClass().getName());
 		}
 		return records;
 				
@@ -141,17 +147,20 @@ public class Trainer {
 			PrePostProcessor prePostProcessor, MLalgorithms alg) {
 		//Call training algorithm
 		if (records.size() <= trainingMaxData) {
-			//Call the preprocess if there is any
+			/************** PRE PROCESSING ***********************/
 			if(prePostProcessor != null ) {
 				records = prePostProcessor.preprocess(records,origin);				
 			}
-						
+
+			/************** TRAINING ***********************/						
 			alg.learn(records,origin);	
 			
-			//Call the postprocess if there is any
+			/************** POST PROCESSING ***********************/
 			if(prePostProcessor != null ) {
 				records = prePostProcessor.postprocess(records,origin);				
 			}
+		}else {
+			System.err.println("["+origin+"] Training set exceeds trainingMaxData defined in algs.props file. Training not executed");
 		}
 		return records;
 	}

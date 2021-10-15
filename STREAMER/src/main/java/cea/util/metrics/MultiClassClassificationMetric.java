@@ -1,8 +1,6 @@
 package cea.util.metrics;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -11,6 +9,7 @@ import java.util.Vector;
 import com.google.common.io.Resources;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 public class MultiClassClassificationMetric extends Metric {
 
@@ -79,16 +78,16 @@ public class MultiClassClassificationMetric extends Metric {
 			 * to be calculated
 			 */
 			int classes_number = -1;
-			if(id.equals("default")) {
-				id=".";
+			String origin = id;
+			if(origin.equals("default")) {
+				origin=".";
 			}
-			try (InputStream props = Resources.getResource("setup/" + id + "/" + "algs.props").openStream()) {
+			try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
 				properties.load(props);
 				classes_number = Integer.parseInt(properties.getProperty("classes.number"));
 			} catch (Exception e) {
-				System.out.println("This metric require the field classes.number to be specified in the file: "
-						+ "setup/" + id + "/" + "algs.props");
-				// TODO Auto-generated catch block
+				System.out.println("["+id+"] This metric require the field classes.number to be specified in the file: "
+						+ GlobalUtils.resourcesPathPropsFiles + id + "/" + "algs.props");
 				e.printStackTrace();
 				return null;
 			}
@@ -100,21 +99,22 @@ public class MultiClassClassificationMetric extends Metric {
 		}
 
 		calculateConfusionMatrix(records);
+
+		System.out.println("["+id+"] "+this.multicm.toString());
 		return results;
 	}
 
+	/**
+	 * Method to compute the confusion matrix
+	 * @param records
+	 */
 	private void calculateConfusionMatrix(Vector<TimeRecord> records) {
 		this.multicm = new MultiConfusionMatrix<String>(classes);
-		Iterator<TimeRecord> it = records.iterator();
-
-		while (it.hasNext()) {
-			TimeRecord record = it.next();
-			if (record.getTarget() == null || record.getOutput() == null)
+		for(TimeRecord record: records) {
+			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
 				continue;
-			this.multicm.add(record.getTarget(), record.getOutput());
-		}
-
-		System.out.println(this.multicm.toString());
+			this.multicm.add(record.getTarget().get(0), record.getOutput().get(0));
+		}		
 	}
 
 }
