@@ -42,7 +42,7 @@ public class TimeStampProducer extends Producer {
 	/**
 	 * Activates the producer who simulates the sending data from the source to the topic channel by simulating 
 	 * records date and time to current time.
-	 * @param args If there are many files to read from
+	 * @param id If there are many files to read from
 	 * @throws IOException
 	 */
 	@Override

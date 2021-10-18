@@ -23,7 +23,7 @@ public abstract class Producer {
 	
 	/**
 	 * Activates the producer who simulates the sending data from the source to the topic channel.
-	 * @param args If there are many files to read from
+	 * @param id If there are many files to read from
 	 * @throws IOException
 	 */
 	public abstract void produce(String id) throws IOException;
