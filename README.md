@@ -9,11 +9,11 @@ Check our [website](https://streamer-framework.github.io)
 The documentation is intended to give an introduction on how to use STREAMER in the various possible ways. 
 As a user you can use it to develop new algorithms and test different Machine Learning algorithms in a streaming context.
 
-[Getting Started](https://github.com/streamer-framework/streamer/streamer/GettingStartedGuideSTREAMER.pdf)
+[Getting Started](https://streamer-framework.github.io/docs/GettingStartedGuideSTREAMER_v2.0.pdf)
 
-[Extended User Guide](https://github.com/streamer-framework/streamer/streamer/UserGuideSTREAMER.pdf)
+[Extended User Guide](https://streamer-framework.github.io/docs/UserGuideSTREAMER_v2.0.pdf)
 
-[Javadoc](https://github.com/streamer-framework/streamer/streamer/docs/javadoc)
+[Javadoc](https://github.com/streamer-framework/streamer/tree/main/STREAMER/javadoc)
 
 ## License
 
