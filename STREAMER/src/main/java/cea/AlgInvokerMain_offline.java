@@ -47,7 +47,11 @@ public class AlgInvokerMain_offline {
 			if(args.length > 4) {
 				modelStoredPath=args[4];
 			}
-		} 
+			System.out.println("Data source: "+dataSourceType + "\tId: " + id+ "\tTrain: "+train+ "\tTest: "+test);
+
+		}else {
+			System.out.println("Less that 4 arguments provided, default parameters are considered.");
+		}
 		
 		// Clean logs and db
 		InfluxDBConnector.init();

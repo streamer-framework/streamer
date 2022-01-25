@@ -3,6 +3,7 @@ package cea.util.metrics;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 public class MeanAbsoluteErrorMetric extends RegressionMetric {
 	/**
@@ -12,7 +13,7 @@ public class MeanAbsoluteErrorMetric extends RegressionMetric {
 	 */
 	@Override
 	public String getName() {
-		return "mean_absolute_error";
+		return "mean_absolute_error (MAE)";
 	}
 	
 	/**
@@ -22,18 +23,17 @@ public class MeanAbsoluteErrorMetric extends RegressionMetric {
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		double result = -1;
-		double sum_absolute_errors = 0;
-		for(TimeRecord record: records) {
-			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
-				continue;
-
-			sum_absolute_errors += Math.abs(Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0)));
-
+		double result = Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			double sum_absolute_errors = 0;
+			for(TimeRecord record: records) {
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+					continue;
+				sum_absolute_errors += Math.abs(Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0)));
+			}
+			result = GlobalUtils.safeDivison(sum_absolute_errors,records.size());
+			result = GlobalUtils.roundAvoid(result, 3);
 		}
-		result = safeDivison(sum_absolute_errors,records.size());
-		result = this.roundAvoid(result, 3);
-		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
 		return ret;

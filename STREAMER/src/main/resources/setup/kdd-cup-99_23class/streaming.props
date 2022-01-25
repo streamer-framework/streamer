@@ -59,5 +59,10 @@ problem.type = KDDClassification
 #consumer.prepostprocessor = PrePostProcessorKDDClassification (to be added if needed)
 outputTopic = OutputPlatformKDDB
 
+#Model is trained online [true/false] (default=true)
+online.train = true
+#Model's inference activation [true/false] (default=true)
+online.inference = true
+
 #### Common Params
 mainTopic = topic_kddmulticlass

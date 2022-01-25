@@ -3,6 +3,7 @@ package cea.util.metrics;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 /**
  * Reliability Metric for Interval Regression problems
@@ -24,7 +25,7 @@ public class AverageCoverageError extends RegressionMetric {
 	 */
 	@Override
 	public String getName() {
-		return "average_coverage_error";
+		return "average_coverage_error (ACE)";
 	}
 	
 	
@@ -35,10 +36,12 @@ public class AverageCoverageError extends RegressionMetric {
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		double PICP = PICP(records,id);
-		double PINC = PINC(q);	
+		double result = Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			result = PICP(records,id) - PINC(q);
+		}
 		Vector<Double> ret = new Vector<Double>();
-		ret.add(PICP - PINC);
+		ret.add(result);
 		return ret;
 	}
 	
@@ -68,8 +71,8 @@ public class AverageCoverageError extends RegressionMetric {
 				}
 			}	
 		}
-		result = safeDivison(acum,records.size());
-		result = this.roundAvoid(result, 4);
+		result = GlobalUtils.safeDivison(acum,records.size());
+		result = GlobalUtils.roundAvoid(result, 4);
 		
 		if(!ok) {
 			System.err.println("At least one output does not contain 3 values [prediction, lowerBound, UpperBound]");

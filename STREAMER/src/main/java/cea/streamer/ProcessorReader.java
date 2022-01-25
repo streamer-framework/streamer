@@ -27,6 +27,8 @@ import cea.util.Log;
 import cea.util.connectors.ElasticSearchConnector;
 import cea.util.connectors.InfluxDBConnector;
 import cea.util.metrics.Metric;
+import cea.util.monitoring.Alert;
+import cea.util.monitoring.MonitoringDetector;
 import cea.util.prepostprocessors.PrePostProcessor;
 
 /*
@@ -127,7 +129,13 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 	 * Class with the metrics to evaluate the incoming data. If null means that no
 	 * processing is needed
 	 */
-	private Vector<Metric> metrics;
+	private Vector<Metric> metricsName;
+	
+	/**
+	 * Detector for deviation in results evaluations (metrics) while monitoring.
+	 * It is normally used to call the update model policy
+	 */
+	private MonitoringDetector monitoringDetector;
 
 	/**
 	 * Unique identifier of the processor
@@ -140,7 +148,20 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 	 */
 	private int countReceivedRecords;
 	
-	boolean visualization = false;
+	/**
+	 * It sends data to ES for visualization
+	 */
+	private boolean visualization = false;
+	
+	/**
+	 * Number of stream which is being processed (start by 0)
+	 */
+	private long iteration;
+	
+	/**
+	 * Alert launched for retraining
+	 */
+	private Alert alert;
 
 	/**
 	 * Constructor that initialized the parameters of the streaming process
@@ -159,87 +180,26 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 	 */
 
 	public ProcessorReader(String origin, String kvstoreName/* , int counter */) {
-
-		System.err.println("["+origin+"] ProcessorReader starts ");
-
+		
 		id = (origin/* + counter */);
-		if (origin.equals("default")) {
-			origin = ".";
-		}
 
+		System.out.println("["+id+"] ProcessorReader starts ");
+		
 		if (Log.showDebug) {
 			System.out.println("["+id+"] constructor()");
 		}
 
 		this.kvstoreName = kvstoreName;
-
-		programInitTime = System.currentTimeMillis();
-		previousTimeStamp = 0;
-		Class<?> recC;
-		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/streaming.props").openStream()) {
-			properties.load(props);
-			readingTimeInterval = Integer.parseInt(properties.getProperty("readingTimeInterval"));
-			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").replace(" ","");
-			try {
-				if (properties.containsKey("visualization")) { 
-					visualization = Boolean.parseBoolean( properties.getProperty("visualization").toLowerCase());
-				}
-				if (properties.containsKey("online.train")) { 
-					onlineTrain = Boolean.parseBoolean( properties.getProperty("online.train").toLowerCase());
-				}
-				if (properties.containsKey("online.inference")) { 
-					onlineInference = Boolean.parseBoolean( properties.getProperty("online.inference").toLowerCase());
-				}
-			} catch (Exception e) {
-				System.err.println("["+id+"] visualisation\" field in streaming.props must be \"true\" or \"false\".");
-			}
-			try {
-				if (properties.containsKey("consumer.prepostprocessor")) {
-					recC = Class.forName((GlobalUtils.packagePrePostProcessors + ".")
-							+ properties.getProperty("consumer.prepostprocessor"));
-					prePostProcessor = (PrePostProcessor) recC.getDeclaredConstructor().newInstance();
-				}
-			} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
-					| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e3) {
-				System.err.println("["+id+"] The postprocessor class doen not exist");
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
-			properties.load(props);
-			className = (GlobalUtils.packageAlgs + ".") + properties.getProperty("algorithm").replace(" ","");
-			previousTrainingTime = 0;
-			trainingInterval = Long.parseLong(properties.getProperty("training.interval"));
-			trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));
-
-			if (properties.containsKey("evaluation.metrics")) {
-				String[] aux = (properties.getProperty("evaluation.metrics")).replace(" ","").split(",");
-				metrics = new Vector<Metric>();
-				for (String metricName : aux) {
-					try {
-						recC = Class.forName((GlobalUtils.packageMetrics + ".") + metricName);
-						metrics.add((Metric) recC.getDeclaredConstructor().newInstance());
-					} catch (InstantiationException | IllegalArgumentException | InvocationTargetException
-							| SecurityException | IllegalAccessException | NoSuchMethodException
-							| ClassNotFoundException e3) {
-						System.err.println("["+id+"] The metric " + metricName + " class does not exist");
-					}
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 	}
+
 
 	/**
 	 * Method that initializes the processor context
 	 */
 	@Override
 	public void init(ProcessorContext<String,String> context) {
+		iteration = 0;
+		readPropertiesFiles();
 		// keep the processor context locally because we need it in punctuate()
 		// and commit()
 		this.context = context;
@@ -369,6 +329,10 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 	 * topic, stored in InfluxDB and sent to the algorithm module
 	 */
 	private void operateData(long currentTime) {
+		
+		iteration++;
+		
+		System.out.println("\n["+id+"] Stream "+iteration);
 
 		Vector<TimeRecord> records = new Vector<TimeRecord>();
 
@@ -386,7 +350,6 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 
 		/* Instead, for the moment, we just send it to an output topic */
 		KeyValueIterator<String,String> iter = this.kvStore.all();
-
 		while (iter.hasNext()) {
 			KeyValue<String,String> entry = (KeyValue<String,String>) iter.next();
 			//context.forward(new Record<String, String>(entry.key, entry.value,-1));// sends the raw record to the output topic
@@ -395,9 +358,7 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 				Class<?> recC = Class.forName(problemType + "Record");
 				TimeRecord recObj = (TimeRecord) recC.getDeclaredConstructor().newInstance();
 				recObj.fill(entry.key.toString(),entry.value.toString());
-
 				records.add(recObj);
-
 				this.kvStore.delete((String) entry.key);
 			} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
 					| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e) {
@@ -405,7 +366,6 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 				e.printStackTrace();
 			}
 		}
-		System.out.println();
 		this.kvStore.flush();
 		iter.close();
 
@@ -443,8 +403,9 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 			MLalgorithms alg = (MLalgorithms) algC.getDeclaredConstructor().newInstance();
 
 			/************** TRAINING ***********************/
-			if ((onlineTrain) && (trainingInterval >= 0) && ((currentTime - previousTrainingTime) >= trainingInterval)) {// shall we run
+			if ((onlineTrain) && ( ((trainingInterval >= 0) && ((currentTime - previousTrainingTime) >= trainingInterval)) || alert.isAlert()) ) {//we retrain if it is time or there is an alert
 				Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(id, trainingMaxData,alg.isUpdateModel());
+				if(alert.isAlert()) System.out.println("["+id+"] ("+iteration+") Training, alert activated");
 				if (recordsDB.size() <= trainingMaxData) {
 					if(!recordsDB.isEmpty()){ 
 						System.out.println("["+id+"] Training: algorithm " + algC);
@@ -464,9 +425,8 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 				}else {
 					System.err.println("["+id+"] Training not performed, records training set ("+recordsDB.size()+") is greater than the maximum size defined ("+trainingMaxData+")");
 				}
-
 				previousTrainingTime = currentTime;
-
+				alert.setAlert(false);
 			}
 
 			/************** INFERENCE ***********************/
@@ -497,17 +457,29 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 		
 		/********************* METRICS ***********************/
 		Map<Metric, Vector<Double>> metricsEvaluation = new LinkedHashMap<Metric, Vector<Double>>();
-		if(!records.isEmpty()){ 
-			if (metrics != null) {
-				for (Metric metric : metrics) {
+		if(!records.isEmpty()/* && GlobalUtils.containsOutputs(records)*/){ //metrics are usually computed if outputs are produced most of the times but not necessarily
+			if (metricsName != null) {
+				for (Metric metric : metricsName) {
 					Vector<Double> values = metric.evaluate(records, id);
 					metricsEvaluation.put(metric, values);
-					StringBuilder metricLog = new StringBuilder("["+id+"] "+metric.getName()+" =");
+					StringBuilder metricLog = new StringBuilder("["+id+"] ("+iteration+") "+metric.getName()+" =");
 					for(double d:values) {
 						metricLog.append(" "+d);
 					}				
 					Log.metricsLog.info(metricLog.toString());
 					System.out.println(metricLog.toString());
+				}
+				//insert the accumulated data
+				if(monitoringDetector != null) { //deviation detection is required		
+					/* Create a thread that executes the monitoring algorithm */
+					//Thread monitoringThread = new Thread() {
+					//	public void run() {
+							alert.setAlert(monitoringDetector.detec(metricsEvaluation, id,iteration));
+							metricsEvaluation.put(alert, alert.evaluate(null, id));
+
+					//	}
+					//};
+					//monitoringThread.start();
 				}
 			}
 		}else {
@@ -522,4 +494,93 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 
 	}
 
+	/**
+	 * Read Setup configuration (from properties files)
+	 */
+	private void readPropertiesFiles() {
+		String origin = id;
+		if (origin.equals("default")) {
+			origin = ".";
+		}
+		
+		programInitTime = System.currentTimeMillis();
+		previousTimeStamp = 0;
+		Class<?> recC;
+		Properties properties = new Properties();
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/streaming.props").openStream()) {
+			properties.load(props);
+			readingTimeInterval = Integer.parseInt(properties.getProperty("readingTimeInterval"));
+			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").replace(" ","");
+			try {
+				if (properties.containsKey("visualization")) { 
+					visualization = Boolean.parseBoolean( properties.getProperty("visualization").toLowerCase());
+				}
+				if (properties.containsKey("online.train")) { 
+					onlineTrain = Boolean.parseBoolean( properties.getProperty("online.train").toLowerCase());
+				}
+				if (properties.containsKey("online.inference")) { 
+					onlineInference = Boolean.parseBoolean( properties.getProperty("online.inference").toLowerCase());
+				}
+			} catch (Exception e) {
+				System.err.println("["+id+"] visualisation\" field in streaming.props must be \"true\" or \"false\".");
+			}
+			try {
+				if (properties.containsKey("consumer.prepostprocessor")) {
+					recC = Class.forName((GlobalUtils.packagePrePostProcessors + ".")
+							+ properties.getProperty("consumer.prepostprocessor").replace(" ",""));
+					prePostProcessor = (PrePostProcessor) recC.getDeclaredConstructor().newInstance();
+				}
+			} catch (InstantiationException | IllegalArgumentException | InvocationTargetException | SecurityException
+					| IllegalAccessException | NoSuchMethodException | ClassNotFoundException e3) {
+				System.err.println("["+id+"] The postprocessor class doen not exist");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
+			properties.load(props);
+			className = (GlobalUtils.packageAlgs + ".") + properties.getProperty("algorithm").replace(" ","");
+			previousTrainingTime = 0;
+			trainingInterval = Long.parseLong(properties.getProperty("training.interval"));
+			trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));
+
+			if (properties.containsKey("evaluation.metrics")) {
+				String[] aux = (properties.getProperty("evaluation.metrics")).replace(" ","").split(",");
+				metricsName = new Vector<Metric>();
+				for (String metricName : aux) {
+					try {
+						recC = Class.forName((GlobalUtils.packageMetrics + ".") + metricName);
+						metricsName.add((Metric) recC.getDeclaredConstructor().newInstance());
+					} catch (InstantiationException | IllegalArgumentException | InvocationTargetException
+							| SecurityException | IllegalAccessException | NoSuchMethodException
+							| ClassNotFoundException e3) {
+						System.err.println("["+id+"] The metric " + metricName + " class does not exist");
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		alert = new Alert();//alert default at false
+		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
+			properties.load(props);
+			if (properties.containsKey("detector")) {
+				String dec = (properties.getProperty("detector")).replace(" ","");
+				try {					
+					recC = Class.forName((GlobalUtils.packageMonitoring + ".") + dec);
+					monitoringDetector = ((MonitoringDetector) recC.getDeclaredConstructor().newInstance());					
+				} catch (InstantiationException | IllegalArgumentException | InvocationTargetException
+						| SecurityException | IllegalAccessException | NoSuchMethodException
+						| ClassNotFoundException e3) {
+					System.err.println("["+id+"] The detector " + dec + " is not correctly specified.");
+					e3.printStackTrace();
+				}
+			}	
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 }

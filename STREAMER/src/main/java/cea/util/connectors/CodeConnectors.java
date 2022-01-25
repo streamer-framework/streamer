@@ -39,7 +39,7 @@ public class CodeConnectors {
 			Properties properties = new Properties();
 			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
 			properties.load(props);
-			r_exec_command = properties.getProperty("r_exec_path").trim();
+			r_exec_command = properties.getProperty("r_exec_path").replace(" ","");
 			props.close();
 			
 			Process p = Runtime.getRuntime().exec(r_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
@@ -76,7 +76,7 @@ public class CodeConnectors {
 			Properties properties = new Properties();
 			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
 			properties.load(props);
-			py_exec_command = properties.getProperty("py_exec_path").trim();
+			py_exec_command = properties.getProperty("py_exec_path").replace(" ","");
 			props.close();
 			
 			if (py_exec_command.contains("conda")) {

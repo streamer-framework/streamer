@@ -192,7 +192,9 @@ public class ElasticSearchConnector {
 				 */
 				if (metricsEvaluation.get(k) != null) {
 					Double value = metricsEvaluation.get(k).get(0);
-					obj.put("metrics." + k.getName(), value);
+					if(!value.isNaN() && !value.isInfinite()){//if the value is a real number
+						obj.put("metrics." + k.getName(), value);
+					}
 				}
 			}
 			IndexRequest insertRequest = new IndexRequest(evaluationindex);

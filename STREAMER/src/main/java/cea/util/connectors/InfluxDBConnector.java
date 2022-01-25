@@ -15,6 +15,7 @@ import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
+import org.influxdb.dto.QueryResult.Series;
 
 import com.google.common.io.Resources;
 
@@ -205,37 +206,40 @@ public class InfluxDBConnector {
 				
 		// iterate the results and print details
 		for (QueryResult.Result result : queryResult.getResults()) {
-			for (QueryResult.Series series : result.getSeries()) {
-				// get indices of the Columns for a TimeRecord
-				//int indexId = series.getColumns().indexOf("id");
-				int indexSource = series.getColumns().indexOf("source");
-				int indexTime = series.getColumns().indexOf("time");
-				int indexValues = series.getColumns().indexOf("values");
-				int indexTarget = series.getColumns().indexOf("target");// it returns -1 if it does not contain any target
-
-				for (List serie : series.getValues()) {// for each time record in the db
-
-					// delete T and Z in timestamp to get a proper format
-					String timestamp = serie.get(indexTime).toString().replace("T", " ").replace("Z", "");
-
-					// construct a TimeRecord object
-					try {
-						Class<?> recC = Class.forName(problemType + "Record");
-						TimeRecord recObj= (TimeRecord) recC.getDeclaredConstructor().newInstance();
-						
-						// recObj.fill(rec);
-						recObj.setSource("" + serie.get(indexSource));
-						recObj.setTimeStamp(timestamp);
-						recObj.importValues("" + serie.get(indexValues));
-						if (indexTarget != -1) {// if there is a target
-							String target = ""+serie.get(indexTarget);
-							recObj.setTarget(Arrays.asList(target.split(recObj.getSeparatorFieldsRawData())) );
+			List<Series> seriesList = result.getSeries();
+			if(seriesList !=null) {
+				for (QueryResult.Series series : seriesList) {
+					// get indices of the Columns for a TimeRecord
+					//int indexId = series.getColumns().indexOf("id");
+					int indexSource = series.getColumns().indexOf("source");
+					int indexTime = series.getColumns().indexOf("time");
+					int indexValues = series.getColumns().indexOf("values");
+					int indexTarget = series.getColumns().indexOf("target");// it returns -1 if it does not contain any target
+	
+					for (List<Object> serie : series.getValues()) {// for each time record in the db
+	
+						// delete T and Z in timestamp to get a proper format
+						String timestamp = serie.get(indexTime).toString().replace("T", " ").replace("Z", "");
+	
+						// construct a TimeRecord object
+						try {
+							Class<?> recC = Class.forName(problemType + "Record");
+							TimeRecord recObj= (TimeRecord) recC.getDeclaredConstructor().newInstance();
+							
+							// recObj.fill(rec);
+							recObj.setSource("" + serie.get(indexSource));
+							recObj.setTimeStamp(timestamp);
+							recObj.importValues("" + serie.get(indexValues));
+							if (indexTarget != -1) {// if there is a target
+								String target = ""+serie.get(indexTarget);
+								recObj.setTarget(Arrays.asList(target.split(recObj.getSeparatorFieldsRawData())) );
+							}
+							records.add(recObj);
+						} catch (ClassNotFoundException | InstantiationException | 
+								IllegalAccessException | IllegalArgumentException | 
+								InvocationTargetException | NoSuchMethodException | SecurityException e) {
+							e.printStackTrace();
 						}
-						records.add(recObj);
-					} catch (ClassNotFoundException | InstantiationException | 
-							IllegalAccessException | IllegalArgumentException | 
-							InvocationTargetException | NoSuchMethodException | SecurityException e) {
-						e.printStackTrace();
 					}
 				}
 			}

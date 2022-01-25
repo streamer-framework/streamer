@@ -133,7 +133,7 @@ public class Launcher {
 
 		KafkaStreams streams = new KafkaStreams(builder, streamsConfiguration);
 
-		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+		if (System.getProperty("os.name").replace(" ","").toLowerCase().contains("windows")) {
 
 			// If Kafka is running, then we cannot delete the file (other process is using it)
 			try (AdminClient client = KafkaAdminClient.create(streamsConfiguration)) {

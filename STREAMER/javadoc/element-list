@@ -6,4 +6,5 @@ cea.streamer.core
 cea.util
 cea.util.connectors
 cea.util.metrics
+cea.util.monitoring
 cea.util.prepostprocessors

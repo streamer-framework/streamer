@@ -43,6 +43,7 @@ public class GlobalUtils {
 
 	/* Package paths */
 	static public String packageMetrics = "cea.util.metrics";
+	static public String packageMonitoring = "cea.util.monitoring";
 	static public String packagePrePostProcessors = "cea.util.prepostprocessors";
 	static public String packageAlgs = "cea.streamer.algs";
 	static public String packageTimeRecords = "cea.streamer.core";
@@ -379,7 +380,7 @@ public class GlobalUtils {
 		String aux = this.getClass().getClassLoader().getResource("algs/neuralNetworkTrain.R").toString();	
 		String projectTree = project_name + "/";//"dsplatform/STREAMER/";
 		aux = aux.replace("file:", "");
-		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+		if (System.getProperty("os.name").replace(" ","").toLowerCase().contains("windows")) {
 			// MA261439 added this for windows users
 			// TO WORK ON WINDOWS, WE NEED TO SKIP THE FIRST "/"
 			// OR WE CAN DO IT IN ANOTHER WAY
@@ -425,5 +426,34 @@ public class GlobalUtils {
 		}
 		return ret;		
 	}
+
+	/**
+	 * Check that there is at least one record from the set who contains an output
+	 * @param records set
+	 * @return output contained (true or false)
+	 */
+	public static boolean containsOutputs(Vector<TimeRecord> records) {
+		for(TimeRecord record: records) {
+			if(!((record.getOutput()).isEmpty()) ){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	//////////////////////////// MATH OPERATIONS //////////////////////////////
+	
+	public static double safeDivison(double v1, double v2) {
+		double result = v1/v2;
+	//	if(((Double)(result)).isNaN())
+	//		result = 0;
+		return result;
+	}
+	
+	public static double roundAvoid(double value, int places) {
+	    double scale = Math.pow(10, places);
+	    return Math.round(value * scale) / scale;
+	}
+	
 	
 }

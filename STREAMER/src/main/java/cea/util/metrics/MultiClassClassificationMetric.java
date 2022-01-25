@@ -26,6 +26,7 @@ public class MultiClassClassificationMetric extends Metric {
 		// classes.add("3");classes.add("4");
 		// this.multicm = new MultiConfusionMatrix<String>(classes);
 	}
+	
 
 	public int getActualTotal(String actual) {
 		return multicm.getActualTotal(actual);
@@ -53,18 +54,6 @@ public class MultiClassClassificationMetric extends Metric {
 
 	public List<String> getClasses() {
 		return multicm.getClasses();
-	}
-
-	public double roundAvoid(double value, int places) {
-		double scale = Math.pow(10, places);
-		return Math.round(value * scale) / scale;
-	}
-
-	public double safeDivison(double v1, double v2) {
-		double result = v1 / v2;
-		if (((Double) (result)).isNaN())
-			result = 0;
-		return result;
 	}
 
 	@Override

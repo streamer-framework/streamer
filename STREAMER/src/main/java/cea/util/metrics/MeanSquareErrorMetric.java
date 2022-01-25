@@ -3,6 +3,7 @@ package cea.util.metrics;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 public class MeanSquareErrorMetric extends RegressionMetric {
 	/**
@@ -12,7 +13,7 @@ public class MeanSquareErrorMetric extends RegressionMetric {
 	 */
 	@Override
 	public String getName() {
-		return "mean_square_error";
+		return "mean_square_error (MSE)";
 	}
 	
 	/**
@@ -22,18 +23,19 @@ public class MeanSquareErrorMetric extends RegressionMetric {
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		double result = -1;
-		double sum_sqaure_errors = 0;
-		for(TimeRecord record: records) {
-			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
-				continue;
-
-			sum_sqaure_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
-
+		double result = Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			double sum_sqaure_errors = 0;
+			for(TimeRecord record: records) {
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+					continue;
+	
+				sum_sqaure_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
+	
+			}
+			result = GlobalUtils.safeDivison(sum_sqaure_errors,records.size());
+			result = GlobalUtils.roundAvoid(result, 3);
 		}
-		result = safeDivison(sum_sqaure_errors,records.size());
-		result = this.roundAvoid(result, 3);
-		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
 		return ret;

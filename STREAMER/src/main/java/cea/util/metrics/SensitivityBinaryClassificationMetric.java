@@ -3,6 +3,7 @@ package cea.util.metrics;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 public class SensitivityBinaryClassificationMetric extends BinaryClassificationMetric {
 
@@ -23,12 +24,12 @@ public class SensitivityBinaryClassificationMetric extends BinaryClassificationM
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		super.evaluate(records,id);
-		double result = -1;
-		
-		result = safeDivison(((double) (this.getTruePositive())),((double) (this.getTruePositive() + this.getFalseNegative() )));
-		result = this.roundAvoid(result, 3);
-		
+		double result=Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			super.evaluate(records,id);
+			result = GlobalUtils.safeDivison(((double) (this.getTruePositive())),((double) (this.getTruePositive() + this.getFalseNegative() )));
+			result = GlobalUtils.roundAvoid(result, 3);
+		}
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
 		return ret;

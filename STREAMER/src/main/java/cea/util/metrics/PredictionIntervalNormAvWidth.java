@@ -3,6 +3,7 @@ package cea.util.metrics;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 /**
  * Sharpness Metric for Interval Regression problems
@@ -11,14 +12,13 @@ import cea.streamer.core.TimeRecord;
  *
  */
 public class PredictionIntervalNormAvWidth extends RegressionMetric {
-	
-	
+		
 	/**
-	 * Target range
+	 * Target range (AL use case)
 	 * 	Max = 4.64901391144444
 	 *  Min = -1.16108771735395
 	 */
-	private double A = (4.64901391144444-(-1.16108771735395)); //by default (1 to be ignored since we do not know the range a priori)	
+	private double A = (4.64901391144444-(-1.16108771735395));	
 	/**
 	 * Returns the name of the metric
 	 * 
@@ -36,28 +36,30 @@ public class PredictionIntervalNormAvWidth extends RegressionMetric {
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		double result = -1;
-		double acum = 0;
-		boolean ok = true;
-		for(TimeRecord record: records) {
-			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
-				continue;
-			if(record.getOutput().size() !=3) {
-				ok = false;
-			}else {
-				double lowerBound = Double.parseDouble(record.getOutput().get(1));
-				double upperBound = Double.parseDouble(record.getOutput().get(2));				
-				acum += (upperBound-lowerBound);				
-			}	
+		double result=Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			double acum = 0;
+			boolean ok = true;
+			for(TimeRecord record: records) {
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+					continue;
+				if(record.getOutput().size() !=3) {
+					ok = false;
+				}else {
+					double lowerBound = Double.parseDouble(record.getOutput().get(1));
+					double upperBound = Double.parseDouble(record.getOutput().get(2));				
+					acum += (upperBound-lowerBound);				
+				}	
+			}
+			if(!ok) {
+				System.err.println("At least one output does not contain 3 values [prediction, lowerBound, UpperBound]");
+			}
+			result = GlobalUtils.safeDivison(acum,(records.size()*A));
+			result = GlobalUtils.roundAvoid(result, 4);
 		}
-		result = safeDivison(acum,(records.size()*A));
-		result = this.roundAvoid(result, 4);
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
 		
-		if(!ok) {
-			System.err.println("At least one output does not contain 3 values [prediction, lowerBound, UpperBound]");
-		}
 		return ret;
 	}
 	

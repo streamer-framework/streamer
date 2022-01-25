@@ -61,6 +61,7 @@ public class Trainer {
 	            path = Paths.get( properties.getProperty("training.source") );
 				Log.displayLogTrain.info("["+id+"]: "+path);				
 	 	} catch (IOException e) {
+	 		System.err.println("Parameters not properly defined in algos.props");
 			e.printStackTrace();
 		}		
 		Class<?> recC;
@@ -70,7 +71,7 @@ public class Trainer {
 	    	problemType = (GlobalUtils.packageTimeRecords+".")+properties.getProperty("problem.type").replace(" ","");	    			
 	    	try {
 	    		if(properties.containsKey("consumer.prepostprocessor")) {	    				
-					recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+properties.getProperty("consumer.prepostprocessor"));
+					recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+properties.getProperty("consumer.prepostprocessor").replace(" ",""));
 					prePostProcessor = (PrePostProcessor)recC.getDeclaredConstructor().newInstance();
 	    		}
 	    		if (properties.containsKey("containsHeader")) { 

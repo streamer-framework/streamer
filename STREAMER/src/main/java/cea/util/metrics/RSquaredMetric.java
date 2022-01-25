@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
+import cea.util.GlobalUtils;
 
 public class RSquaredMetric extends RegressionMetric {
 	/**
@@ -13,7 +14,7 @@ public class RSquaredMetric extends RegressionMetric {
 	 */
 	@Override
 	public String getName() {
-		return "r_square";
+		return "r_square (r2)";
 	}
 	
 	/**
@@ -24,28 +25,28 @@ public class RSquaredMetric extends RegressionMetric {
 	 */
 	@Override
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
-		double result = -1;
-		double sum_sqaure_errors = 0;
-		double sum_sqaure_means = 0;
-		ArrayList<Double> targets = new ArrayList<Double>();
-		
-		for(TimeRecord record: records) {
-			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
-				continue;			
-			targets.add(Double.parseDouble(record.getTarget().get(0)));			
-			sum_sqaure_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
+		double result=Double.NaN;
+		if(GlobalUtils.containsOutputs(records)) {
+			double sum_sqaure_errors = 0;
+			double sum_sqaure_means = 0;
+			ArrayList<Double> targets = new ArrayList<Double>();
+			
+			for(TimeRecord record: records) {
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+					continue;			
+				targets.add(Double.parseDouble(record.getTarget().get(0)));			
+				sum_sqaure_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
+			}
+			
+			double mean = calculateMean(targets);
+			for(double t: targets) {
+				sum_sqaure_means += Math.pow(t - mean, 2);
+			}	
+			
+			result = 1 - (GlobalUtils.safeDivison(sum_sqaure_errors,sum_sqaure_means));
+			result = GlobalUtils.roundAvoid(result, 3);
 		}
-		
-		double mean = calculateMean(targets);
-		for(double t: targets) {
-			sum_sqaure_means += Math.pow(t - mean, 2);
-		}	
-		
-		result = 1 - (safeDivison(sum_sqaure_errors,sum_sqaure_means));
-		result = this.roundAvoid(result, 3);
-		
-		//if (result < 0) result= 0;
-		
+		//if (result < 0) result= 0;		
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
 		return ret;

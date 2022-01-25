@@ -86,7 +86,7 @@ public class ModelRunner {
 	    	problemType = (GlobalUtils.packageTimeRecords+".")+properties.getProperty("problem.type").replace(" ","");	    			
     		try {
 	    		if(properties.containsKey("consumer.prepostprocessor")) {	    				
-					recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+properties.getProperty("consumer.prepostprocessor"));
+					recC = Class.forName((GlobalUtils.packagePrePostProcessors+".")+properties.getProperty("consumer.prepostprocessor").replace(" ",""));
 					prePostProcessor = (PrePostProcessor)recC.getDeclaredConstructor().newInstance();
 	    		}
 	    		if (properties.containsKey("containsHeader")) { 
