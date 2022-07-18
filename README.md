@@ -26,11 +26,9 @@ Our community is formed by a group of AI researchers working for CEA List (LI3A)
 
 The development of STREAMER is being supported by two collaborative projects (StreamOps and SmartWater4Europe) and CEA List.
 
-### Developers
+### Head of the project
 
 Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
-
-Mohammad ALSHAER (mohammad.alshaer@cea.fr)
 
 ## Getting Started
 
