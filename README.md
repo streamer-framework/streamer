@@ -157,7 +157,7 @@ docker-compose down
 ### 4) Install services yourself
 
 STREAMER uses the following services that you can easily install yourself:
-- [Apache Kafka (with Zookeeper)](https://kafka.apache.org/quickstart) / soft / Apache License 7.3.0 / version=2.7 
-- [Redis](https://redis.io/) / soft / BSD / version= 7.0.5 
+- [Apache Kafka (with Zookeeper)](https://kafka.apache.org/quickstart) / soft / Apache License 2.0 / version 7.3.0
+- [Redis](https://redis.io/) / soft / BSD / version 7.0.5 
 - [InfluxDB](https://portal.influxdata.com/) / soft / MIT / version 1.8.10
-- [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version=:7.17.0 [Optional service, just for using the Graphical Interface]
+- [Elasticsearch & Kibana](https://www.elastic.co/) / soft / Apache License 2.0 / version 7.17.0 [Optional service, just for using the Graphical Interface]
