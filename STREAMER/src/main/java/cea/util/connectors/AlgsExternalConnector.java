@@ -178,7 +178,7 @@ public class AlgsExternalConnector {
 	private Vector<List<String>> runModel(Vector<TimeRecord> recordsDB, String modelPath) {		
 		
 		if(modelPath != null) {
-			GlobalUtils.modelFromDiskToRedis(id, modelPath); //retreives the model from file and stores it in redis
+			GlobalUtils.fileFromDiskToRedis(id+RedisConnector.MODEL_TAG, modelPath); //retrieves the model from file and stores it in redis
 		}
 	
 		//Call the model

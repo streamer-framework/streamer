@@ -517,6 +517,7 @@ public abstract class TimeRecord implements Serializable{
 			dateTime = systemTimeDateFormat.parse(timestamp);
 			cal.setTime(dateTime);
 		} catch (ParseException e) {
+			System.err.println("Data format not correct.");
 			e.printStackTrace();
 		}			 
 				

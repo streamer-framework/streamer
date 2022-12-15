@@ -36,7 +36,7 @@ public class AlgInvokerMain_offline {
 		String id = "default"; /* default value */	
 		boolean train = true; /* default value */
 		boolean test = true; /* default value */
-		String modelStoredPath=null; /* default value */
+		String modelStoredPath= null; /* default value */
 		
 		
 		if (args.length >= 4) { //if arguments are complete
@@ -68,7 +68,7 @@ public class AlgInvokerMain_offline {
 			
 			Trainer trainer = new Trainer();
 			records = trainer.trainAll(dataSourceType, id, modelStoredPath);
-			GlobalUtils.printSet(records,false);
+			//GlobalUtils.printSet(records,true);
 			GlobalUtils.saveRecordsToFile(records, "./"+id+"_resultsTrain.csv", ";", false);
 		}
 		
@@ -77,7 +77,7 @@ public class AlgInvokerMain_offline {
 
 			ModelRunner model = new ModelRunner();
 			records= model.run(dataSourceType, id, modelStoredPath);
-			GlobalUtils.printSet(records, true);
+			//GlobalUtils.printSet(records, true);
 			GlobalUtils.saveRecordsToFile(records, "./"+id+"_resultsTest.csv", ";", true);
 		}
 	}

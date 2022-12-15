@@ -23,6 +23,7 @@ import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;
 import cea.util.Log;
 import cea.util.connectors.InfluxDBConnector;
+import cea.util.connectors.RedisConnector;
 import cea.util.metrics.Metric;
 import cea.util.prepostprocessors.PrePostProcessor;
 
@@ -142,7 +143,7 @@ public class ModelRunner {
 		
 		//We retreives the model from disk if requested
 		if(modelStoredPath != null) {
-			GlobalUtils.modelFromDiskToRedis(id, modelStoredPath); //retreives the model from file and stores it in redis
+			GlobalUtils.fileFromDiskToRedis(id+RedisConnector.MODEL_TAG, modelStoredPath); //retrieves the model from file and stores it in redis
 		}
 				
 		

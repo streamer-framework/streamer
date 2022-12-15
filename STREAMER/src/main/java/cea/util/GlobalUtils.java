@@ -96,24 +96,30 @@ public class GlobalUtils {
 	 * Restore the model read from file into Redis
 	 *
 	 * @param id of the process
-	 * @param modelPathFile file path where the model is stored
+	 * @param filePath file path where the model is stored
 	 */
-	public static  String modelFromDiskToRedis(String id, String modelPathFile) {
+	public static  String fileFromDiskToRedis(String id, String filePath) {
 		String model = null;
 		try {
-			FileInputStream fileIn = new FileInputStream(modelPathFile);
+		/*	FileInputStream fileIn = new FileInputStream(modelPathFile);
 			//ObjectInputStream objectIn = new ObjectInputStream(fileIn);
 			//model = (String)objectIn.readObject();
 			//objectIn.close();
 			BufferedReader br = new BufferedReader(new InputStreamReader(fileIn));
-			model = br.readLine();
+			String aux = br.readLine();
+			while(aux != null) {
+				model += aux;
+				aux = br.readLine();
+			}
 			br.close();
+					*/
+			byte[] content = Files.readAllBytes(new File(filePath).toPath());
+			//store in redis
+			RedisConnector.storeModelInRedis(id, content);	
 		} catch (IOException /*| ClassNotFoundException */e) {
-			System.err.println("Model could not be extracted from file path: "+modelPathFile);
+			System.err.println("Content could not be extracted from file path: "+filePath);
 			e.printStackTrace();			
-		}
-		//store in redis
-		RedisConnector.storeModelInRedis(id, model);		
+		}	
 		
 		return model;
 	}

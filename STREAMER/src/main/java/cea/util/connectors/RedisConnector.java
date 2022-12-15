@@ -197,6 +197,20 @@ public class RedisConnector {
 	}
 	
 	/**
+	 * Get the model stored in redis
+	 * @param id Identification of problem
+	 * @param content in byte[] 
+	 * @return model stored in redis under the name MODEL_TAG+id
+	 */
+	public static void storeModelInRedis(String id, byte[] content) {
+		Jedis jedis = getJedis();
+		jedis.del(id/*+MODEL_TAG*/);	
+		//String key = (id+MODEL_TAG);
+		jedis.set(id.getBytes(),content);
+		jedis.close();
+	}
+	
+	/**
 	 * Get an instantiation of Redis
 	 * @return instantiation of Redis
 	 */

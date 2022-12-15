@@ -22,6 +22,15 @@ import cea.util.metrics.Metric;
  *
  */
 public class ThresholdDetector extends MonitoringDetector{	
+	
+	/**
+	 * Values: true or false. Alert is raised if value is greater [true] or lower [false] than threshold
+	 */
+	boolean ALERT_GREATER = true;
+	/**
+	 * Threshold is considered in its absolute value [true], otherwise [false]
+	 */
+	boolean ABS_THRESHOLD = true;
 		
 	public ThresholdDetector() {	
 		super();
@@ -31,6 +40,8 @@ public class ThresholdDetector extends MonitoringDetector{
 		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
 			properties.load(props);
 			String[] threshold = (properties.getProperty("threshold.threshold")).replace(" ","").split(",");
+			ALERT_GREATER = Boolean.parseBoolean(properties.getProperty("threshold.threshold.alert-if-greater").replace(" ",""));
+			ABS_THRESHOLD = Boolean.parseBoolean(properties.getProperty("threshold.threshold.abs").replace(" ",""));
 			int i=0;			
 			for(String name: metricNames) {
 				if(threshold.length == 1) {//if there is only 1 value, we assign it to all metric detectors
@@ -90,7 +101,11 @@ public class ThresholdDetector extends MonitoringDetector{
 		boolean detected = false;
 		double aux=-1;
 		for(Double value:metricValues) {//a metric can return several values
-			if( Math.abs(value) > threshold) {//if any of those values do not respect the threshold
+			if(ABS_THRESHOLD){
+				value = Math.abs(value);
+			}
+			if( (value > threshold && ALERT_GREATER) ||
+					(value < threshold && !ALERT_GREATER) ){//if any of those values do not respect the threshold
 				detected = true;
 				aux = value;
 			}
