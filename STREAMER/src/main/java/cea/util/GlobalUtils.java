@@ -3,13 +3,11 @@ package cea.util;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -49,7 +47,7 @@ public class GlobalUtils {
 	static public String packageTimeRecords = "cea.streamer.core";
 	
 	/* Resources paths */
-	static public String resourcesPathPropsFiles = "setup/";
+	static public String resourcesPathPropsFiles = "src/main/resources/setup/";
 	
 
 	/**

@@ -1,6 +1,7 @@
 package cea.streamer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +60,7 @@ public class Launcher {
 		Properties streamsConfiguration = new Properties();
 		String[] inputTopics = null;
 		String outputTopic = null;
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + ids[0] + "/streaming.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + ids[0] + "/streaming.props")) {
 			streamsConfiguration.load(props);
 		}
 		
@@ -105,8 +106,7 @@ public class Launcher {
 			} else {
 				id = ids[i];
 			}
-			try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + ids[i] + "/" + "streaming.props")
-					.openStream()) {
+			try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + ids[i] + "/" + "streaming.props")){
 				streamsConfiguration.load(props);
 				inputTopics = (streamsConfiguration.getProperty("mainTopic").replace(" ","")).split(",");
 				outputTopic = streamsConfiguration.getProperty("outputTopic").replace(" ","");

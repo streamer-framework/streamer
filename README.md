@@ -28,7 +28,9 @@ The development of STREAMER is being supported by two collaborative projects (St
 
 ### Head of the project
 
-Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
+Leader: Sandra GARCIA-RODRIGUEZ (sandra.garciarodriguez@cea.fr)
+
+Other collaborators from STREAMER comminity.
 
 ## Getting Started
 

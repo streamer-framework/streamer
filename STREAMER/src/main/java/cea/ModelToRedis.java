@@ -1,11 +1,9 @@
 package cea;
 
-import cea.util.GlobalUtils;
-
 public class ModelToRedis {
 
 	public static void main(String[] args) {
-		String path="/home/sandra/AIConfiance/F18_2022/code/domain-shift/models/bestmodel.h5";
+		String path="/home/sandra/AIConfiance/FA18_2022/code/domain-shift/models/bestmodel.h5";
 		String modelName="autoencodermodel";
 		//String path= new GlobalUtils().getAbsoluteBaseProjectPath() + "src/main/resources/algs/domain_shift/models/bestmodel.h5";
 		

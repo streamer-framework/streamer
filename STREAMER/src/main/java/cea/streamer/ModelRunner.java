@@ -1,6 +1,7 @@
 package cea.streamer;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,7 +60,7 @@ public class ModelRunner {
 		PrePostProcessor prePostProcessor = null;
 		Vector<Metric> metrics = null;
 		boolean containHeaders = false;
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+origin+"/algs.props").openStream() ){		 
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + origin+"/algs.props")){		 
 			    properties.load(props);
 		    	className = (GlobalUtils.packageAlgs+".")+properties.getProperty("algorithm").replace(" ","");		    	
 		    	trainingMaxData = Long.parseLong(properties.getProperty("training.maxdata"));	
@@ -81,7 +82,7 @@ public class ModelRunner {
 			e.printStackTrace();
 		}		
 		Class recC;
-        try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+origin+"/streaming.props").openStream()) {
+        try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles +origin+"/streaming.props")) {
             properties = new Properties();
             properties.load(props);            
 	    	problemType = (GlobalUtils.packageTimeRecords+".")+properties.getProperty("problem.type").replace(" ","");	    			

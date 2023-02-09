@@ -1,6 +1,7 @@
 package cea.producer;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -55,7 +56,7 @@ public class BlocksProducer extends Producer{
 		long recordsPerBlock;
 		long producerTimeInterval;	//in milliseconds
 		boolean containHeaders = false;
-	    try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+id+"/streaming.props").openStream()) {
+	    try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + id + "/streaming.props")) {
 		    Properties properties = new Properties();
 		    properties.load(props);            
 		    producer = new KafkaProducer<String, String>(properties);            

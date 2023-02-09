@@ -1,5 +1,6 @@
 package cea.util.connectors;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
@@ -52,7 +53,7 @@ public class ElasticSearchConnector {
 	 */
 	public static void init() {
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"elasticsearch.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"elasticsearch.props")) {
 			properties.load(props);
 			host = properties.getProperty("host").replace(" ","");
 			if (host.equals("localhost"))

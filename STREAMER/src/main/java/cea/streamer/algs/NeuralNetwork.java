@@ -1,5 +1,6 @@
 package cea.streamer.algs;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -35,7 +36,7 @@ public class NeuralNetwork extends MLalgorithms {
 	
 	public NeuralNetwork() {		
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"neuralNetwork.props").openStream()) {			
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + "neuralNetwork.props")) {			
 			properties.load(props);
 			regressionProblem = properties.getProperty("regression.problem").replace(" ","");
 			hiddenLayers = properties.getProperty("hidden.layers").replace(" ","");

@@ -1,5 +1,6 @@
 package cea.util.monitoring;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.DoubleSummaryStatistics;
@@ -64,7 +65,7 @@ public class CuSumDetector extends MonitoringDetector{
 		metricsCheckPoint = new LinkedHashMap<String, Integer>();
 		
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + "/monitoring.props")) {
 			properties.load(props);
 			drift = Double.parseDouble(properties.getProperty("cusum.drift"));
 			if (properties.containsKey("cusum.factor")) { //optional

@@ -1,10 +1,9 @@
 package cea;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-
-import com.google.common.io.Resources;
 
 import cea.producer.Producer;
 import cea.producer.ProducerFactory;
@@ -43,8 +42,7 @@ public class ProducerMain {
 		Properties properties = new Properties();
 		String producerType = "";
 
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + id + "/" + "streaming.props")
-				.openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + id + "/" + "streaming.props") ){
 			properties.load(props);
 			producerType = properties.getProperty("producerType").replace(" ","");
 		} catch (IOException e) {

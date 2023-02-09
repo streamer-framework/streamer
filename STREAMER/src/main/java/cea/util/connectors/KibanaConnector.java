@@ -2,6 +2,7 @@ package cea.util.connectors;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +32,7 @@ public class KibanaConnector {
 
 	public static void init() {
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"kibana.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"kibana.props")) {
 			properties.load(props);
 			host = properties.getProperty("host").replace(" ","");
 			if (host.equals("localhost"))

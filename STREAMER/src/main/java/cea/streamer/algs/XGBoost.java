@@ -1,5 +1,6 @@
 package cea.streamer.algs;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -40,7 +41,7 @@ public class XGBoost extends MLalgorithms {
 	public XGBoost() {
 
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"xgboost.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + "xgboost.props")){
 
 			properties.load(props);
 			// String booster = properties.getProperty("booster").replace(" ","");

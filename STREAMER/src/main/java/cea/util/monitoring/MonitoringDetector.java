@@ -1,5 +1,6 @@
 package cea.util.monitoring;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -42,7 +43,7 @@ public abstract class MonitoringDetector {
 	 */
 	public void readCommonProperties(String detector) {		
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + "/monitoring.props")) {
 			properties.load(props);
 			metricNames = properties.getProperty("metrics").replace(" ","").split(",");
 			String[] robustness = (properties.getProperty("threshold.robustness")).replace(" ","").split(",");

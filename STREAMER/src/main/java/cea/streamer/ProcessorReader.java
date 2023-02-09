@@ -1,5 +1,6 @@
 package cea.streamer;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -507,7 +508,7 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 		previousTimeStamp = 0;
 		Class<?> recC;
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/streaming.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + origin + "/streaming.props")) {
 			properties.load(props);
 			readingTimeInterval = Integer.parseInt(properties.getProperty("readingTimeInterval"));
 			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").replace(" ","");
@@ -538,7 +539,7 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 			e.printStackTrace();
 		}
 
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props")) {
 			properties.load(props);
 			className = (GlobalUtils.packageAlgs + ".") + properties.getProperty("algorithm").replace(" ","");
 			previousTrainingTime = 0;
@@ -564,7 +565,7 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 		}
 		
 		alert = new Alert();//alert default at false
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles  + "/monitoring.props")) {
 			properties.load(props);
 			if (properties.containsKey("detector")) {
 				String dec = (properties.getProperty("detector")).replace(" ","");

@@ -1,5 +1,6 @@
 package cea.util.monitoring;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -37,7 +38,7 @@ public class ThresholdDetector extends MonitoringDetector{
 		readCommonProperties("threshold");
 		
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + "/monitoring.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + "/monitoring.props")) {
 			properties.load(props);
 			String[] threshold = (properties.getProperty("threshold.threshold")).replace(" ","").split(",");
 			ALERT_GREATER = Boolean.parseBoolean(properties.getProperty("threshold.threshold.alert-if-greater").replace(" ",""));

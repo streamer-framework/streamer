@@ -1,5 +1,6 @@
 package cea.util.connectors;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -227,7 +228,7 @@ public class RedisConnector {
 	public static String getRedisIP() {
 		String host="localhost:6379";
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"redis.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"redis.props")) {
 			properties.load(props);
 			host = properties.getProperty("host").replace(" ","");
 		} catch (IOException e1) {
@@ -244,7 +245,7 @@ public class RedisConnector {
 	public static String getRedisPort() {
 		String host="localhost:6379";
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"redis.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"redis.props")) {
 			properties.load(props);
 			host = properties.getProperty("host").replace(" ","");
 		} catch (IOException e1) {

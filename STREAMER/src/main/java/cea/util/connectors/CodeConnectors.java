@@ -1,6 +1,7 @@
 package cea.util.connectors;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,7 +38,7 @@ public class CodeConnectors {
 			
 			String r_exec_command = "Rscript";
 			Properties properties = new Properties();
-			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
+			InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props");
 			properties.load(props);
 			r_exec_command = properties.getProperty("r_exec_path").replace(" ","");
 			props.close();
@@ -74,7 +75,7 @@ public class CodeConnectors {
 			Process p = null;
 			String py_exec_command = "python";
 			Properties properties = new Properties();
-			InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props").openStream();
+			InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"codeConnectors.props");
 			properties.load(props);
 			py_exec_command = properties.getProperty("py_exec_path").replace(" ","");
 			props.close();

@@ -1,5 +1,6 @@
 package cea.util.connectors;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -63,7 +64,7 @@ public class InfluxDBConnector {
 	public static void init() {
 
 		Properties properties = new Properties();
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+"influxDB.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+"influxDB.props")) {
 			properties.load(props);
 			dbName = properties.getProperty("dbName").replace(" ","");
 			host = properties.getProperty("host").replace(" ","");
@@ -197,7 +198,7 @@ public class InfluxDBConnector {
 		}
 		Properties properties = new Properties();
 		String problemType=null;
-		try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles+origin+"/streaming.props").openStream()) {
+		try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles+origin+"/streaming.props")) {
 			properties.load(props);
 			problemType = (GlobalUtils.packageTimeRecords + ".") + properties.getProperty("problem.type").replace(" ","");
 		} catch (IOException e1) {

@@ -1,5 +1,6 @@
 package cea.util.metrics;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
@@ -71,7 +72,7 @@ public class MultiClassClassificationMetric extends Metric {
 			if(origin.equals("default")) {
 				origin=".";
 			}
-			try (InputStream props = Resources.getResource(GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props").openStream()) {
+			try (InputStream props = new FileInputStream (GlobalUtils.resourcesPathPropsFiles + origin + "/algs.props")) {
 				properties.load(props);
 				classes_number = Integer.parseInt(properties.getProperty("classes.number"));
 			} catch (Exception e) {
