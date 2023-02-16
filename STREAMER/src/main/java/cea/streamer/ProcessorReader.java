@@ -19,8 +19,6 @@ import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueIterator;
 import org.apache.kafka.streams.state.KeyValueStore;
 
-import com.google.common.io.Resources;
-
 import cea.streamer.algs.MLalgorithms;
 import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;
