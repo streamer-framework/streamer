@@ -20,8 +20,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 
 public class KibanaConnector {
@@ -101,8 +99,7 @@ public class KibanaConnector {
 			http.setRequestProperty("kbn-xsrf", "true");
 			http.setRequestProperty("Content-Type", "application/json");
 			// Reading the json file that is the back up of the dashboard
-			File file = new File(
-					new GlobalUtils().getAbsoluteBaseProjectPath() + "src/main/resources/setup/dashboard.json");
+			File file = new File(GlobalUtils.resourcesPathPropsFiles+"dashboard.json");
 			JSONParser parser = new JSONParser();
 
 			// Use JSONObject for simple JSON and JSONArray for array of JSON.

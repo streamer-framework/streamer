@@ -23,8 +23,6 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.json.simple.JSONObject;
 
-import com.google.common.io.Resources;
-
 import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;
 import cea.util.metrics.Metric;
@@ -61,7 +59,6 @@ public class ElasticSearchConnector {
 			evaluationindex = properties.getProperty("index.evaluation").replace(" ","");
 			rawdataindex = properties.getProperty("index.rawdata").replace(" ","");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		createIndex(evaluationindex);

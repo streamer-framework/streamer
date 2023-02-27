@@ -23,8 +23,6 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.state.StoreBuilder;
 import org.apache.kafka.streams.state.Stores;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 import cea.util.Log;
 import cea.util.connectors.InfluxDBConnector;
