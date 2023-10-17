@@ -17,8 +17,6 @@ import java.util.Vector;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.google.common.io.Resources;
-
 import cea.streamer.algs.MLalgorithms;
 import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;

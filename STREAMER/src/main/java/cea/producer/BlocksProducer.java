@@ -12,8 +12,6 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 
 /**

@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
-import com.google.common.io.Resources;
-
 import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;
 import redis.clients.jedis.Jedis;
@@ -23,7 +21,8 @@ public class RedisConnector {
 	public final static String DATATRAIN_TAG="datatrain";
 	public final static String DATATEST_TAG="datatest";
 	public final static String MODEL_TAG = "model";
-	
+	public final static String METRICS_TAG = "metrics";
+
 	/**
 	 * Host of the Redis database
 	 */
@@ -106,8 +105,7 @@ public class RedisConnector {
 	 * Method that gets back the data stored in Redis
 	 * IMPORTANT: records must preserve the order
 	 * 
-	 * @param records Current time records vector 
-	 * @param tag (extra info to id)
+	 * @param records Current time records vector
 	 * @param id 
 	 * @return Vector of time records updated with redis values corresponding to the key
 	 */
@@ -127,7 +125,7 @@ public class RedisConnector {
 				int i=0;
 				String[] outputs;
 				for(TimeRecord record: records) {
-					outputs = predicted.get(i).split(separatorFields);//we split if the output has several values					
+					outputs = predicted.get(i).split(separatorFields);//we split if the output has several values
 					record.setOutput(Arrays.asList(outputs));
 					i++;
 				}
@@ -140,7 +138,6 @@ public class RedisConnector {
 						
 		return records;
 	}
-	
 
 	/**
 	 * Clear and reset the keys in Redis (confusion matrix)
@@ -196,21 +193,35 @@ public class RedisConnector {
 		jedis.set(id+MODEL_TAG,model);
 		jedis.close();
 	}
-	
+
 	/**
 	 * Get the model stored in redis
 	 * @param id Identification of problem
-	 * @param content in byte[] 
+	 * @param content in byte[]
 	 * @return model stored in redis under the name MODEL_TAG+id
 	 */
 	public static void storeModelInRedis(String id, byte[] content) {
 		Jedis jedis = getJedis();
-		jedis.del(id/*+MODEL_TAG*/);	
+		jedis.del(id/*+MODEL_TAG*/);
 		//String key = (id+MODEL_TAG);
 		jedis.set(id.getBytes(),content);
 		jedis.close();
 	}
 	
+	/**
+	 * Get the metrics stored in redis
+	 * @param id Identification of problem
+	 * @return metrics stored in redis under the name id+METRICS_TAG
+	 */
+	public static List<String> getMetricsFromRedis(String id) {
+		Jedis jedis = getJedis();
+		List<String> metrics = jedis.lrange(id+METRICS_TAG, 0, -1);
+		jedis.del(id+METRICS_TAG);
+		jedis.close();
+		return metrics;
+	}
+
+
 	/**
 	 * Get an instantiation of Redis
 	 * @return instantiation of Redis

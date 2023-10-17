@@ -13,8 +13,6 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 /**
  * This producer writes in a topic each line (form : "timestamp;value") of a datafile continuously and periodically.

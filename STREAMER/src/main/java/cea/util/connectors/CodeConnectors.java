@@ -11,8 +11,6 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 import cea.util.Log;
 
@@ -60,15 +58,42 @@ public class CodeConnectors {
 	}
 	
 	/**
-	 * Method that executes in command line a Python script and prints the output into a log file
-	 * 
-	 * @param scriptFileName the path of the Python script
-	 * @param id the arguments needed for the Python script (if needed)
+	 * Method that configures the arguments of a Python script, executes it in command line
+	 * and prints the output into a log file.
+	 * @param scriptFileName the path of the Python script.
+	 * @param id the arguments needed for the Python script (if needed).
 	 */
 	public static String execPyFile(String scriptFileName, String id) {
 		String redisIP =  RedisConnector.getRedisIP();
 		String redisPort =  RedisConnector.getRedisPort();
-		System.out.println("["+id+"] Started execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
+		String args = id + " " + redisIP + " " + redisPort;
+		return runPyCommand(scriptFileName, id, args);
+	}
+	/**
+	 * Method that configures the arguments of a Python script, executes it in command line
+	 * and prints the output into a log file.
+	 * Specific to the distributed module or the federated algorithm.
+	 * @param scriptFileName The path of the Python script.
+	 * @param id Identifier of the problem.
+	 * @param step_name Name of the step to perform.
+	 * @param data_mode Data mode (redis/pickle).
+	 */
+	public static String execPyFile(String scriptFileName, String id, String step_name, String data_mode) {
+		String redisIP =  RedisConnector.getRedisIP();
+		String redisPort =  RedisConnector.getRedisPort();
+		String args = id + " " + step_name + " " + redisIP + " " + redisPort + " " + data_mode;
+		return runPyCommand(scriptFileName, id, args);
+	}
+
+	/**
+	 * Method that executes a Python script in command line and prints the output into a log file.
+	 * @param scriptFileName The path of the Python script.
+	 * @param id Identifier of the problem.
+	 * @param args Arguments of the Python script.
+	 */
+	public static String runPyCommand(String scriptFileName, String id, String args) {
+
+		System.out.println("["+id+"] Started execution " + scriptFileName + " with args " + args);
 
 		String lastLine="";
 		try {			
@@ -82,17 +107,17 @@ public class CodeConnectors {
 			
 			if (py_exec_command.contains("conda")) {
 				ProcessBuilder pb = new ProcessBuilder();
-				pb.command("cmd", "/c",py_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
+				pb.command("cmd", "/c",py_exec_command + " " + scriptFileName + " " + args);
 				p = pb.start();
 				lastLine = launchScript(p, id, scriptFileName);
 			} else {
-				p = Runtime.getRuntime().exec(py_exec_command + " " + scriptFileName + " " + id + " " + redisIP + " " + redisPort);
+				p = Runtime.getRuntime().exec(py_exec_command + " " + scriptFileName + " " + args);
 				//p.waitFor();
 				lastLine = launchScript(p, id, scriptFileName);
 			}
-			
-			System.out.println("["+id+"] Finished execution " + scriptFileName + " with args " +id+ " " + redisIP + " " + redisPort);
-			
+
+			System.out.println("["+id+"] Finished execution " + scriptFileName + " with args " + args);
+
 			//Send data to JSON
 			/*if (scriptFileName.toLowerCase().contains("test")) {
 				String jsonFileName = "./json/result" + args + ".json";
@@ -104,7 +129,7 @@ public class CodeConnectors {
 		}
 		return lastLine;
 	}
-	
+
 	/**
 	 * Shows in "scipt.out" live messages from the script which is running
 	 * @param p process
@@ -169,5 +194,5 @@ public class CodeConnectors {
 		String[] aux = infoMessages.toString().split("\n");		
 		return aux[aux.length-1];
 	}
-	
+
 }

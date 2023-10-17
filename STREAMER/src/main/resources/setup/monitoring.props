@@ -1,33 +1,40 @@
 #Metrics for detection (several metrics accepted separated by comma)
-#metrics = MeanSquareErrorMetric
-#metrics = PredictionIntervalNormRootWidth,PredictionIntervalNormAvWidth,AverageCoverageError,MeanSquareErrorMetric,RootMeanSquareErrorMetric,MeanAbsoluteErrorMetric
-metrics = AverageCoverageError,PredictionIntervalNormAvWidth,PredictionIntervalNormRootWidth
 
+###Metrics for CMAPSS FL demo
+metrics = RootMeanSquareErrorMetric, CMAPSSScore
 
 #detector = CuSumDetector
 #detector = CuSumDetectorOnLine
-#detector = ThresholdDetector
+
+###Detector for CMAPSS FL demo
+detector = ThresholdDetector
 
 #Parameters for Threshold
 
-## Values: true or false. Alert is raised if value is greater [true] or lower [false] than threshold 
-threshold.threshold.alert-if-greater = false
-## Threshold is considered in its absolute value [true], otherwise [false] 
+## Values: true or false. Alert is raised if value is greater [true] or lower [false] than threshold
+## Several values accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
+###Parameters for CMAPSS FL demo
+threshold.threshold.alert-if-greater = true
+
+## Threshold is considered in its absolute value [true], otherwise [false]
+## Several values accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
+###Parameters for CMAPSS FL demo
 threshold.threshold.abs = false
 
-##Several thresholds accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics 
-###Parameters for ACE, PINAW, PINRW 
-threshold.threshold =  0.32,0.18,0.2
+
 
 ##Several thresholds accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
-###Parameters for ACE, PINAW, PINRW 
-threshold.robustness = 2,5,5
+###Parameters for CMAPSS FL demo
+threshold.threshold =  10, 100
 
+##Several robustness values accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
+###Parameters for CMAPSS FL demo
+threshold.robustness = 2
 
 #Parameters for CUSUM
 cusum.factor = 5
 cusum.drift = 0
-## [Optional] Several thresholds accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics 
+## [Optional] Several thresholds accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
 #cusum.threshold = 2
 ## Several values accepted separated by comma, one per monitored metric. If only 1 value, it will apply to all metrics
 cusum.robustness = 2

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
+import cea.federated.client.Client;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.processor.PunctuationType;
 import org.apache.kafka.streams.processor.api.Processor;
@@ -161,6 +162,26 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 	 * Alert launched for retraining
 	 */
 	private Alert alert;
+
+	/**
+	 * Boolean that determines if the client is connected to the server or not.
+	 */
+	private boolean notConnected = true;
+
+	/**
+	 * Boolean that determines if the distributed mode is activated or not.
+	 */
+	private boolean distributedMode = false;
+
+	/**
+	 * Address of the server needed to establish the connection.
+	 */
+	private String server_address;
+
+	/**
+	 * Name of the python file for the distributed ('federated') module.
+	 */
+	private String pythonFilePath;
 
 	/**
 	 * Constructor that initialized the parameters of the streaming process
@@ -402,30 +423,55 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 			MLalgorithms alg = (MLalgorithms) algC.getDeclaredConstructor().newInstance();
 
 			/************** TRAINING ***********************/
-			if ((onlineTrain) && ( ((trainingInterval >= 0) && ((currentTime - previousTrainingTime) >= trainingInterval)) || alert.isAlert()) ) {//we retrain if it is time or there is an alert
-				Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(id, trainingMaxData,alg.isUpdateModel());
-				if(alert.isAlert()) System.out.println("["+id+"] ("+iteration+") Training, alert activated");
-				if (recordsDB.size() <= trainingMaxData) {
-					if(!recordsDB.isEmpty()){ 
-						System.out.println("["+id+"] Training: algorithm " + algC);
-	
-						/* Create a thread that executes the training algorithm */
-						Thread trainingThread = new Thread() {
-							public void run() {
-								Log.displayLogTrain
-										.info("\n ####### ["+id+"] New Model (trained from InfluxDB): #######\n ");
-								alg.learn(recordsDB, id);
-							}
-						};
-						trainingThread.start();
-					}else {
-						System.err.println("["+id+"] Training not performed, records set is empty");
-					}						
-				}else {
-					System.err.println("["+id+"] Training not performed, records training set ("+recordsDB.size()+") is greater than the maximum size defined ("+trainingMaxData+")");
+
+			if(distributedMode) {
+
+				if(notConnected) {
+
+					notConnected = false;
+					System.out.println("[" + id + "] Distributed mode activated");
+
+					Thread clientThread = new Thread(() -> {
+						Client client = new Client(id, pythonFilePath);
+						client.isOnline = true;
+						if (!onlineTrain) {
+							client.isPassive = true;
+						}
+						client.start_client(server_address);
+					});
+					clientThread.start();
+
 				}
-				previousTrainingTime = currentTime;
-				alert.setAlert(false);
+
+			} else {
+
+				if ((onlineTrain) && ( ((trainingInterval >= 0) && ((currentTime - previousTrainingTime) >= trainingInterval)) || alert.isAlert()) ) {
+					//we retrain if it is time or there is an alert
+					Vector<TimeRecord> recordsDB = InfluxDBConnector.getRecordsDB(id, trainingMaxData,alg.isUpdateModel());
+					if(alert.isAlert()) System.out.println("["+id+"] ("+iteration+") Training, alert activated");
+					if (recordsDB.size() <= trainingMaxData) {
+						if(!recordsDB.isEmpty()){
+							System.out.println("["+id+"] Training: algorithm " + algC);
+
+							/* Create a thread that executes the training algorithm */
+							Thread trainingThread = new Thread() {
+								public void run() {
+									Log.displayLogTrain
+											.info("\n ####### ["+id+"] New Model (trained from InfluxDB): #######\n ");
+									alg.learn(recordsDB, id);
+								}
+							};
+							trainingThread.start();
+						}else {
+							System.err.println("["+id+"] Training not performed, records set is empty");
+						}
+					}else {
+						System.err.println("["+id+"] Training not performed, records training set ("+recordsDB.size()+") is greater than the maximum size defined ("+trainingMaxData+")");
+					}
+					previousTrainingTime = currentTime;
+					alert.setAlert(false);
+				}
+
 			}
 
 			/************** INFERENCE ***********************/
@@ -580,6 +626,14 @@ public class ProcessorReader implements Processor<String, String,String,String> 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		try (InputStream props = new FileInputStream(GlobalUtils.resourcesPathPropsFiles + id + "/federated.props")) {
+			properties.load(props);
+			server_address = properties.getProperty("server.address");
+			distributedMode = Boolean.parseBoolean(properties.getProperty("distributed.mode"));
+			pythonFilePath = properties.getProperty("python.file.path");
+		} catch (Exception ignored) {}
+
 	}
 	
 }

@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+// The FL gRPC service "FLCom" is defined using protocol buffers.
+
+option java_multiple_files = true;
+package cea.federated;
+
+service FLCom {
+  rpc participateToNetwork(stream ClientMessage) returns (stream ServerMessage) {}
+}
+
+message FitRequest{
+  string parameters = 1;
+}
+
+message EvaluateRequest {
+  string parameters = 1;
+}
+
+message ModelParameters {
+  string parameters = 1;
+}
+
+message ServerMessage {
+  oneof ServerMessageOneOf {
+    bool init_request =1;
+    FitRequest fit_request = 2;
+    EvaluateRequest evaluate_request = 3;
+    ModelParameters model_parameters = 4;
+    bool end_connection = 5;
+  }
+}
+
+message ConnectionRequest{
+  bool isPassive = 1;
+}
+
+message InitReply{
+  string parameters = 1;
+}
+
+message FitReply{
+  string parameters = 1;
+}
+message EvaluateReply {
+  double loss = 1;
+}
+
+message ModelParametersReply {
+  bool confirmation = 1;
+}
+
+message ClientMessage {
+  oneof ClientMessageOneOf {
+    ConnectionRequest connection_request = 1;
+    InitReply init_reply = 2;
+    FitReply fit_reply = 3;
+    EvaluateReply evaluate_reply = 4;
+    ModelParametersReply model_parameters_reply =5;
+  }
+}

@@ -1,4 +1,11 @@
 cea
+cea.federated
+cea.federated.client
+cea.federated.client.grpc_client
+cea.federated.server
+cea.federated.server.aggregation
+cea.federated.server.grpc_server
+cea.federated.util
 cea.producer
 cea.streamer
 cea.streamer.algs

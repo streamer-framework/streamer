@@ -1,4 +1,1 @@
-install.packages(c("caret","RCurl","rredis", "kernlab", "e1071", "neuralnet","xgboost"))
-
-
-
+install.packages(c("rredis","caret","RCurl","rredis", "kernlab", "e1071", "h2o","neuralnet","xgboost","clustertend","optCluster","factoextra"))

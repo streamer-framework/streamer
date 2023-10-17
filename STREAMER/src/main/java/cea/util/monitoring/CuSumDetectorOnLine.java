@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Vector;
 
-import com.google.common.io.Resources;
-
 import cea.util.GlobalUtils;
 import cea.util.metrics.Metric;
 

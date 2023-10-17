@@ -1,0 +1,5 @@
+algorithm = CMAPSSAlg
+training.interval = 20000
+training.maxdata = 5000000
+evaluation.metrics = CMAPSSScore, RootMeanSquareErrorMetric, ShowOutputs, ShowTargets, ShowCMAPSSUnit, ShowCMAPSSTimeCycles
+

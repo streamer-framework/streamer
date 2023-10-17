@@ -1,5 +1,6 @@
 package cea.util.metrics;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
@@ -25,16 +26,20 @@ public class MeanSquareErrorMetric extends RegressionMetric {
 	public Vector<Double> evaluate(Vector<TimeRecord> records, String id) {
 		double result = Double.NaN;
 		if(GlobalUtils.containsOutputs(records)) {
-			double sum_sqaure_errors = 0;
+			double sum_square_errors = 0;
+			int number_valid_records = 0;
 			for(TimeRecord record: records) {
-				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty() ||
+						record.getOutput().equals(Collections.singletonList("nan")))
 					continue;
 	
-				sum_sqaure_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
-	
+				sum_square_errors += Math.pow((Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0))), 2);
+				number_valid_records++;
 			}
-			result = GlobalUtils.safeDivison(sum_sqaure_errors,records.size());
-			result = GlobalUtils.roundAvoid(result, 3);
+			if(number_valid_records > 0) {
+				result = GlobalUtils.safeDivison(sum_square_errors,number_valid_records);
+				result = GlobalUtils.roundAvoid(result, 3);
+			}
 		}
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);

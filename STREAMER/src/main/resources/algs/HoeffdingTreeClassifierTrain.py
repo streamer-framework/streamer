@@ -1,3 +1,6 @@
+import numpy as np
+np.float = float
+
 # import the online algorithm Hoeffding Tree Classifier
 from skmultiflow.trees import HoeffdingTreeClassifier
 # the data source for streaming data (not necessary but it is a good practice)

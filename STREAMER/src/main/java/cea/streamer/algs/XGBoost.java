@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.Vector;
 
-import com.google.common.io.Resources;
-
 import cea.streamer.core.TimeRecord;
 import cea.util.GlobalUtils;
 import cea.util.connectors.CodeConnectors;

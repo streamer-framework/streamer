@@ -1,5 +1,6 @@
 package cea.util.metrics;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
@@ -55,8 +56,10 @@ public class AverageCoverageError extends RegressionMetric {
 		double result = -1;		
 		double acum = 0;
 		boolean ok = true;
+		int number_valid_records = 0;
 		for(TimeRecord record: records) {
-			if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+			if (record.getTarget().isEmpty() || record.getOutput().isEmpty() ||
+					record.getOutput().equals(Collections.singletonList("nan")))
 				continue;
 			if(record.getOutput().size() !=3) {
 				ok = false;
@@ -69,10 +72,13 @@ public class AverageCoverageError extends RegressionMetric {
 				}else {
 					acum += 0;
 				}
+				number_valid_records++;
 			}	
 		}
-		result = GlobalUtils.safeDivison(acum,records.size());
-		result = GlobalUtils.roundAvoid(result, 4);
+		if(number_valid_records > 0) {
+			result = GlobalUtils.safeDivison(acum,number_valid_records);
+			result = GlobalUtils.roundAvoid(result, 4);
+		}
 		
 		if(!ok) {
 			System.err.println("At least one output does not contain 3 values [prediction, lowerBound, UpperBound]");

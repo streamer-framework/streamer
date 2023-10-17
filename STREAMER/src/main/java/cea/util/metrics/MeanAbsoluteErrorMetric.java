@@ -1,5 +1,6 @@
 package cea.util.metrics;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
@@ -26,13 +27,18 @@ public class MeanAbsoluteErrorMetric extends RegressionMetric {
 		double result = Double.NaN;
 		if(GlobalUtils.containsOutputs(records)) {
 			double sum_absolute_errors = 0;
+			int number_valid_records = 0;
 			for(TimeRecord record: records) {
-				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty() ||
+						record.getOutput().equals(Collections.singletonList("nan")))
 					continue;
 				sum_absolute_errors += Math.abs(Double.parseDouble(record.getTarget().get(0))- Double.parseDouble(record.getOutput().get(0)));
+				number_valid_records++;
 			}
-			result = GlobalUtils.safeDivison(sum_absolute_errors,records.size());
-			result = GlobalUtils.roundAvoid(result, 3);
+			if(number_valid_records > 0) {
+				result = GlobalUtils.safeDivison(sum_absolute_errors,number_valid_records);
+				result = GlobalUtils.roundAvoid(result, 3);
+			}
 		}
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);

@@ -13,8 +13,14 @@ public class ProducerFactory{
 	 * @return appropriated object according to specified Producer type
 	 */
 	public  Producer getProducer(String producerType) {
-		
-		return (producerType.equals("TIMESTAMP"))?new TimeStampProducer():new BlocksProducer();
+
+		if(producerType.equals("TIMESTAMP")) {
+			return new TimeStampProducer();
+		} else if(producerType.equals("BLOCKBYGROUP")) {
+			return new BlocksProducerByGroup();
+		} else {
+			return new BlocksProducer();
+		}
 	}
 
 }

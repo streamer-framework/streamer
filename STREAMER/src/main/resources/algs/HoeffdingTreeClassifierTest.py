@@ -1,4 +1,8 @@
 # import the online algorithm Hoeffding Tree Classifier
+
+import numpy as np
+np.float = float
+
 # the data source for streaming data (not necessary but it is a good practice)
 from skmultiflow.data import DataStream #here datastream and not filestream because of using redis
 # import numpy and pandas libraries for reading from csv and data preparation

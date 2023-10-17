@@ -1,0 +1,49 @@
+### PRODUCER
+
+bootstrap.servers=localhost:9092
+acks=all
+retries=0
+batch.size=16384
+auto.commit.interval.ms=1000
+linger.ms=0
+key.serializer=org.apache.kafka.common.serialization.StringSerializer
+value.serializer=org.apache.kafka.common.serialization.StringSerializer
+block.on.buffer.full=true
+
+maxBlocks = 1000
+recordsPerBlock = 50
+producerTimeInterval = 20000
+
+producerType = BLOCKBYGROUP
+epsilonne = -3000
+scale = 1800
+
+datafile = ../data/fl_cmapss/FD001_3_clients_txt/df_test.txt
+containsHeader = false
+
+### LAUNCHER
+
+group.id=test
+application.id=test
+
+key.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
+
+session.timeout.ms=10000
+fetch.min.bytes=50000
+receive.buffer.bytes=262144
+max.partition.fetch.bytes=2097152
+
+readingTimeInterval = 5000
+problem.type = CMAPSS
+outputTopic = OutputPlatformFL
+
+online.train = false
+online.inference = true
+visualization = true
+
+### Common parameters
+
+mainTopic = topic_cmapss
+
+

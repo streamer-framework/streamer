@@ -1,0 +1,14 @@
+### IN THE SERVER SIDE
+
+# MANDATORY
+server.port = 8080
+n.rounds = 200
+aggregation.strategy = FedAvgStrategy
+
+# OPTIONAL
+n.clients = -1
+min.n.clients = 3
+do.client.fit.step = true
+do.client.eval.step = true
+do.server.eval.step = true
+eval.python.file.path = ./src/main/resources/algs/cmapss/alg_launcher.py

@@ -1,0 +1,4 @@
+server.address = localhost:8080
+python.file.path = ./src/main/resources/algs/cmapss/alg_launcher.py
+# for offline client -> redis or pickle
+data.type = redis

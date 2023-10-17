@@ -1,0 +1,4 @@
+server.address = localhost:8080
+python.file.path = ./src/main/resources/algs/cmapss/alg_launcher.py
+# for online client -> true or false
+distributed.mode = true

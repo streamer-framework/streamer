@@ -1,5 +1,6 @@
 package cea.util.metrics;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import cea.streamer.core.TimeRecord;
@@ -40,22 +41,27 @@ public class PredictionIntervalNormAvWidth extends RegressionMetric {
 		if(GlobalUtils.containsOutputs(records)) {
 			double acum = 0;
 			boolean ok = true;
+			int number_valid_records = 0;
 			for(TimeRecord record: records) {
-				if (record.getTarget().isEmpty() || record.getOutput().isEmpty())
+				if (record.getTarget().isEmpty() || record.getOutput().isEmpty() ||
+						record.getOutput().equals(Collections.singletonList("nan")))
 					continue;
 				if(record.getOutput().size() !=3) {
 					ok = false;
 				}else {
 					double lowerBound = Double.parseDouble(record.getOutput().get(1));
 					double upperBound = Double.parseDouble(record.getOutput().get(2));				
-					acum += (upperBound-lowerBound);				
+					acum += (upperBound-lowerBound);	
+					number_valid_records++;
 				}	
 			}
 			if(!ok) {
 				System.err.println("At least one output does not contain 3 values [prediction, lowerBound, UpperBound]");
 			}
-			result = GlobalUtils.safeDivison(acum,(records.size()*A));
-			result = GlobalUtils.roundAvoid(result, 4);
+			if(number_valid_records > 0) {
+				result = GlobalUtils.safeDivison(acum,(number_valid_records*A));
+				result = GlobalUtils.roundAvoid(result, 4);
+			}
 		}
 		Vector<Double> ret = new Vector<Double>();
 		ret.add(result);
