@@ -9,9 +9,9 @@ Check our [website](https://streamer-framework.github.io)
 The documentation is intended to give an introduction on how to use STREAMER in the various possible ways. 
 As a user you can use it to develop new algorithms and test different Machine Learning algorithms in a streaming context.
 
-[Getting Started](https://streamer-framework.github.io/docs/GettingStartedGuideSTREAMER.pdf)
+[Getting Started](https://github.com/streamer-framework/streamer/blob/main/GettingStartedGuideSTREAMER.pdf)
 
-[Extended User Guide](https://streamer-framework.github.io/docs/UserGuideSTREAMER.pdf)
+[Extended User Guide](https://github.com/streamer-framework/streamer/blob/main/UserGuideSTREAMER.pdf)
 
 [Javadoc](https://github.com/streamer-framework/streamer/tree/main/STREAMER/javadoc)
 
@@ -70,9 +70,9 @@ Run from eclipse the main class LauncherMain to launch the streaming pipeline, o
 ```bash
 java -cp target/streamer-1.0.0-test-jar-with-dependencies.jar cea.LauncherMain [setup_folder]
 ```
-4- Create your first use case in STREAMER by following the steps of section 6 of the [Getting Started](https://streamer-framework.github.io/docs/GettingStartedGuideSTREAMER.pdf).
+4- Create your first use case in STREAMER by following the steps of section 6 of the [Getting Started](https://github.com/streamer-framework/streamer/blob/main/GettingStartedGuideSTREAMER.pdf).
 
-5- Run your application in STREAMER as section 5 of the [Getting Started](https://streamer-framework.github.io/docs/GettingStartedGuideSTREAMER.pdf) shows.
+5- Run your application in STREAMER as section 5 of the [Getting Started](https://github.com/streamer-framework/streamer/blob/main/GettingStartedGuideSTREAMER.pdf) shows.
 
 #### Important:
 for running our use case example or our proposed Python or R algorithms do not forget installing the packages they need in your computer. 
