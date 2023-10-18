@@ -5,3 +5,5 @@ STREAMER/logs
 STREAMER/.*
 STREAMER/bin
 /.metadata/
+__pycache__
+STREAMER/src/main/resources/algs/cmapss/__pycache__/
